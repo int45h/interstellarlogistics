@@ -1,0 +1,10 @@
+[
+    {
+      "directory": "/home/deck/Code Stuff/gameboy_stuff/GBjam_2023",
+      "arguments": [
+        "/usr/bin/clang",
+        "-Igbdk/include"
+      ],
+      "file": "main.c"
+    }
+]
