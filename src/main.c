@@ -1,4 +1,3 @@
-#include "gbdk/include/types.h"
 #define REENTRANT
 #include <gb/gb.h>
 #include <gbdk/console.h>
