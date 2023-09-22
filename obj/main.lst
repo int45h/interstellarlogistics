@@ -9,251 +9,416 @@
                                       9 ; Public variables in this module
                                      10 ;--------------------------------------------------------
                                      11 	.globl _main
-                                     12 	.globl _gbCountdownSeconds
-                                     13 	.globl _gbPrintTiles
-                                     14 	.globl _gbInitTiles
-                                     15 	.globl _time
-                                     16 	.globl _rand
-                                     17 	.globl _initrand
-                                     18 	.globl _printf
-                                     19 	.globl _putchar
-                                     20 	.globl _joypad
-                                     21 ;--------------------------------------------------------
-                                     22 ; special function registers
+                                     12 	.globl _gbFindChanceOfLostPkg
+                                     13 	.globl _gbCountdownSeconds
+                                     14 	.globl _gbPrintTiles
+                                     15 	.globl _gbInitTiles
+                                     16 	.globl _time
+                                     17 	.globl _rand
+                                     18 	.globl _initrand
+                                     19 	.globl _printf
+                                     20 	.globl _putchar
+                                     21 	.globl _joypad
+                                     22 	.globl _pkgLossFactor
                                      23 ;--------------------------------------------------------
-                                     24 ;--------------------------------------------------------
-                                     25 ; ram data
+                                     24 ; special function registers
+                                     25 ;--------------------------------------------------------
                                      26 ;--------------------------------------------------------
-                                     27 	.area _DATA
+                                     27 ; ram data
                                      28 ;--------------------------------------------------------
-                                     29 ; ram data
+                                     29 	.area _DATA
                                      30 ;--------------------------------------------------------
-                                     31 	.area _INITIALIZED
+                                     31 ; ram data
                                      32 ;--------------------------------------------------------
-                                     33 ; absolute external ram data
+                                     33 	.area _INITIALIZED
                                      34 ;--------------------------------------------------------
-                                     35 	.area _DABS (ABS)
+                                     35 ; absolute external ram data
                                      36 ;--------------------------------------------------------
-                                     37 ; global & static initialisations
+                                     37 	.area _DABS (ABS)
                                      38 ;--------------------------------------------------------
-                                     39 	.area _HOME
-                                     40 	.area _GSINIT
-                                     41 	.area _GSFINAL
+                                     39 ; global & static initialisations
+                                     40 ;--------------------------------------------------------
+                                     41 	.area _HOME
                                      42 	.area _GSINIT
-                                     43 ;--------------------------------------------------------
-                                     44 ; Home
+                                     43 	.area _GSFINAL
+                                     44 	.area _GSINIT
                                      45 ;--------------------------------------------------------
-                                     46 	.area _HOME
-                                     47 	.area _HOME
-                                     48 ;--------------------------------------------------------
-                                     49 ; code
+                                     46 ; Home
+                                     47 ;--------------------------------------------------------
+                                     48 	.area _HOME
+                                     49 	.area _HOME
                                      50 ;--------------------------------------------------------
-                                     51 	.area _CODE
-                                     52 ;src/main.c:41: void gbInitTiles(GbGameState *pState)
-                                     53 ;	---------------------------------
-                                     54 ; Function gbInitTiles
-                                     55 ; ---------------------------------
-      000000                         56 _gbInitTiles::
-      000000 4B               [ 4]   57 	ld	c, e
-      000001 42               [ 4]   58 	ld	b, d
-                                     59 ;src/main.c:44: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-      000002 1E 00            [ 8]   60 	ld	e, #0x00
-      000004                         61 00106$:
-      000004 7B               [ 4]   62 	ld	a, e
-      000005 E6 07            [ 8]   63 	and	a, #0x07
-      000007 6B               [ 4]   64 	ld	l, e
-                                     65 ;	spillPairReg hl
-                                     66 ;	spillPairReg hl
-      000008 CB 3D            [ 8]   67 	srl	l
-      00000A CB 3D            [ 8]   68 	srl	l
-      00000C CB 3D            [ 8]   69 	srl	l
-      00000E D6 06            [ 8]   70 	sub	a, #0x06
-      000010 30 0B            [12]   71 	jr	NC, 00104$
-      000012 7D               [ 4]   72 	ld	a, l
-      000013 D6 08            [ 8]   73 	sub	a, #0x08
-      000015 30 06            [12]   74 	jr	NC, 00104$
-      000017 6B               [ 4]   75 	ld	l, e
-      000018 26 00            [ 8]   76 	ld	h, #0x00
-      00001A 09               [ 8]   77 	add	hl, bc
-      00001B 36 57            [12]   78 	ld	(hl), #0x57
-      00001D                         79 00104$:
-      00001D 1C               [ 4]   80 	inc	e
-      00001E 7B               [ 4]   81 	ld	a, e
-      00001F D6 40            [ 8]   82 	sub	a, #0x40
-      000021 38 E1            [12]   83 	jr	C, 00106$
-                                     84 ;src/main.c:47: }
-      000023 C9               [16]   85 	ret
-                                     86 ;src/main.c:49: void gbPrintTiles(GbGameState *pState)
-                                     87 ;	---------------------------------
-                                     88 ; Function gbPrintTiles
-                                     89 ; ---------------------------------
-      000024                         90 _gbPrintTiles::
-      000024 3B               [ 8]   91 	dec	sp
-      000025 3B               [ 8]   92 	dec	sp
-                                     93 ;src/main.c:52: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-      000026 F8 01            [12]   94 	ldhl	sp,	#1
-      000028 36 00            [12]   95 	ld	(hl), #0x00
-      00002A                         96 00108$:
-      00002A F8 01            [12]   97 	ldhl	sp,	#1
-      00002C 3A               [ 8]   98 	ld	a, (hl-)
-      00002D E6 07            [ 8]   99 	and	a, #0x07
-      00002F 22               [ 8]  100 	ld	(hl+), a
-      000030 3A               [ 8]  101 	ld	a, (hl-)
-      000031 4F               [ 4]  102 	ld	c, a
-      000032 CB 39            [ 8]  103 	srl	c
-      000034 CB 39            [ 8]  104 	srl	c
-      000036 CB 39            [ 8]  105 	srl	c
-      000038 7E               [ 8]  106 	ld	a, (hl)
-      000039 D6 06            [ 8]  107 	sub	a, #0x06
-      00003B 30 3C            [12]  108 	jr	NC, 00106$
-      00003D 79               [ 4]  109 	ld	a, c
-      00003E D6 08            [ 8]  110 	sub	a, #0x08
-      000040 30 37            [12]  111 	jr	NC, 00106$
-      000042 23               [ 8]  112 	inc	hl
-      000043 D5               [16]  113 	push	de
-      000044 6E               [ 8]  114 	ld	l, (hl)
-      000045 26 00            [ 8]  115 	ld	h, #0x00
-      000047 19               [ 8]  116 	add	hl, de
-      000048 D1               [12]  117 	pop	de
-      000049 4D               [ 4]  118 	ld	c, l
-      00004A 44               [ 4]  119 	ld	b, h
-      00004B 0A               [ 8]  120 	ld	a, (bc)
-      00004C 4F               [ 4]  121 	ld	c, a
-      00004D 06 00            [ 8]  122 	ld	b, #0x00
-      00004F D5               [16]  123 	push	de
-      000050 C5               [16]  124 	push	bc
-      000051 01r84r00         [12]  125 	ld	bc, #___str_0
-      000054 C5               [16]  126 	push	bc
-      000055 CDr00r00         [24]  127 	call	_printf
-      000058 E8 04            [16]  128 	add	sp, #4
-      00005A D1               [12]  129 	pop	de
-      00005B F8 00            [12]  130 	ldhl	sp,	#0
-      00005D 6E               [ 8]  131 	ld	l, (hl)
-                                    132 ;	spillPairReg hl
-                                    133 ;	spillPairReg hl
-      00005E 26 00            [ 8]  134 	ld	h, #0x00
+                                     51 ; code
+                                     52 ;--------------------------------------------------------
+                                     53 	.area _CODE
+                                     54 ;src/main.c:43: void gbInitTiles(GbGameState *pState)
+                                     55 ;	---------------------------------
+                                     56 ; Function gbInitTiles
+                                     57 ; ---------------------------------
+      000000                         58 _gbInitTiles::
+      000000 4B               [ 4]   59 	ld	c, e
+      000001 42               [ 4]   60 	ld	b, d
+                                     61 ;src/main.c:46: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+      000002 1E 00            [ 8]   62 	ld	e, #0x00
+      000004                         63 00106$:
+      000004 7B               [ 4]   64 	ld	a, e
+      000005 E6 07            [ 8]   65 	and	a, #0x07
+      000007 6B               [ 4]   66 	ld	l, e
+                                     67 ;	spillPairReg hl
+                                     68 ;	spillPairReg hl
+      000008 CB 3D            [ 8]   69 	srl	l
+      00000A CB 3D            [ 8]   70 	srl	l
+      00000C CB 3D            [ 8]   71 	srl	l
+      00000E D6 06            [ 8]   72 	sub	a, #0x06
+      000010 30 0B            [12]   73 	jr	NC, 00104$
+      000012 7D               [ 4]   74 	ld	a, l
+      000013 D6 08            [ 8]   75 	sub	a, #0x08
+      000015 30 06            [12]   76 	jr	NC, 00104$
+      000017 6B               [ 4]   77 	ld	l, e
+      000018 26 00            [ 8]   78 	ld	h, #0x00
+      00001A 09               [ 8]   79 	add	hl, bc
+      00001B 36 57            [12]   80 	ld	(hl), #0x57
+      00001D                         81 00104$:
+      00001D 1C               [ 4]   82 	inc	e
+      00001E 7B               [ 4]   83 	ld	a, e
+      00001F D6 40            [ 8]   84 	sub	a, #0x40
+      000021 38 E1            [12]   85 	jr	C, 00106$
+                                     86 ;src/main.c:49: }
+      000023 C9               [16]   87 	ret
+                                     88 ;src/main.c:51: void gbPrintTiles(GbGameState *pState)
+                                     89 ;	---------------------------------
+                                     90 ; Function gbPrintTiles
+                                     91 ; ---------------------------------
+      000024                         92 _gbPrintTiles::
+      000024 3B               [ 8]   93 	dec	sp
+      000025 3B               [ 8]   94 	dec	sp
+                                     95 ;src/main.c:54: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+      000026 F8 01            [12]   96 	ldhl	sp,	#1
+      000028 36 00            [12]   97 	ld	(hl), #0x00
+      00002A                         98 00108$:
+      00002A F8 01            [12]   99 	ldhl	sp,	#1
+      00002C 3A               [ 8]  100 	ld	a, (hl-)
+      00002D E6 07            [ 8]  101 	and	a, #0x07
+      00002F 22               [ 8]  102 	ld	(hl+), a
+      000030 3A               [ 8]  103 	ld	a, (hl-)
+      000031 4F               [ 4]  104 	ld	c, a
+      000032 CB 39            [ 8]  105 	srl	c
+      000034 CB 39            [ 8]  106 	srl	c
+      000036 CB 39            [ 8]  107 	srl	c
+      000038 7E               [ 8]  108 	ld	a, (hl)
+      000039 D6 06            [ 8]  109 	sub	a, #0x06
+      00003B 30 3C            [12]  110 	jr	NC, 00106$
+      00003D 79               [ 4]  111 	ld	a, c
+      00003E D6 08            [ 8]  112 	sub	a, #0x08
+      000040 30 37            [12]  113 	jr	NC, 00106$
+      000042 23               [ 8]  114 	inc	hl
+      000043 D5               [16]  115 	push	de
+      000044 6E               [ 8]  116 	ld	l, (hl)
+      000045 26 00            [ 8]  117 	ld	h, #0x00
+      000047 19               [ 8]  118 	add	hl, de
+      000048 D1               [12]  119 	pop	de
+      000049 4D               [ 4]  120 	ld	c, l
+      00004A 44               [ 4]  121 	ld	b, h
+      00004B 0A               [ 8]  122 	ld	a, (bc)
+      00004C 4F               [ 4]  123 	ld	c, a
+      00004D 06 00            [ 8]  124 	ld	b, #0x00
+      00004F D5               [16]  125 	push	de
+      000050 C5               [16]  126 	push	bc
+      000051 01r84r00         [12]  127 	ld	bc, #___str_0
+      000054 C5               [16]  128 	push	bc
+      000055 CDr00r00         [24]  129 	call	_printf
+      000058 E8 04            [16]  130 	add	sp, #4
+      00005A D1               [12]  131 	pop	de
+      00005B F8 00            [12]  132 	ldhl	sp,	#0
+      00005D 6E               [ 8]  133 	ld	l, (hl)
+                                    134 ;	spillPairReg hl
                                     135 ;	spillPairReg hl
-                                    136 ;	spillPairReg hl
-      000060 23               [ 8]  137 	inc	hl
-      000061 D5               [16]  138 	push	de
-      000062 01 06 00         [12]  139 	ld	bc, #0x0006
-      000065 5D               [ 4]  140 	ld	e, l
-      000066 54               [ 4]  141 	ld	d, h
-      000067 CDr00r00         [24]  142 	call	__modsint
-      00006A D1               [12]  143 	pop	de
-      00006B 78               [ 4]  144 	ld	a, b
-      00006C B1               [ 4]  145 	or	a, c
-      00006D 20 0A            [12]  146 	jr	NZ, 00106$
-      00006F D5               [16]  147 	push	de
-      000070 3E 0A            [ 8]  148 	ld	a, #0x0a
-      000072 F5               [16]  149 	push	af
-      000073 33               [ 8]  150 	inc	sp
-      000074 CDr00r00         [24]  151 	call	_putchar
-      000077 33               [ 8]  152 	inc	sp
-      000078 D1               [12]  153 	pop	de
-      000079                        154 00106$:
-      000079 F8 01            [12]  155 	ldhl	sp,	#1
-      00007B 34               [12]  156 	inc	(hl)
-      00007C 7E               [ 8]  157 	ld	a, (hl)
-      00007D D6 40            [ 8]  158 	sub	a, #0x40
-      00007F 38 A9            [12]  159 	jr	C, 00108$
-                                    160 ;src/main.c:57: }
-      000081 33               [ 8]  161 	inc	sp
-      000082 33               [ 8]  162 	inc	sp
-      000083 C9               [16]  163 	ret
-      000084                        164 ___str_0:
-      000084 25 63 20               165 	.ascii "%c "
-      000087 00                     166 	.db 0x00
-                                    167 ;src/main.c:59: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
-                                    168 ;	---------------------------------
-                                    169 ; Function gbCountdownSeconds
-                                    170 ; ---------------------------------
-      000088                        171 _gbCountdownSeconds::
-      000088 6F               [ 4]  172 	ld	l, a
-                                    173 ;	spillPairReg hl
-                                    174 ;	spillPairReg hl
-                                    175 ;src/main.c:61: return max_time - ((time(NULL)-start_time) % (max_time+1));
-      000089 E5               [16]  176 	push	hl
-      00008A D5               [16]  177 	push	de
-      00008B 11 00 00         [12]  178 	ld	de, #0x0000
-      00008E CDr00r00         [24]  179 	call	_time
-      000091 D1               [12]  180 	pop	de
-      000092 E1               [12]  181 	pop	hl
-      000093 79               [ 4]  182 	ld	a, c
-      000094 16 00            [ 8]  183 	ld	d, #0x00
-      000096 93               [ 4]  184 	sub	a, e
-      000097 5F               [ 4]  185 	ld	e, a
-      000098 78               [ 4]  186 	ld	a, b
-      000099 9A               [ 4]  187 	sbc	a, d
-      00009A 57               [ 4]  188 	ld	d, a
-      00009B 4D               [ 4]  189 	ld	c, l
-      00009C 06 00            [ 8]  190 	ld	b, #0x00
-      00009E 03               [ 8]  191 	inc	bc
-      00009F E5               [16]  192 	push	hl
-      0000A0 CDr00r00         [24]  193 	call	__moduint
-      0000A3 E1               [12]  194 	pop	hl
-      0000A4 7D               [ 4]  195 	ld	a, l
-      0000A5 91               [ 4]  196 	sub	a, c
-                                    197 ;src/main.c:62: }
-      0000A6 C9               [16]  198 	ret
-                                    199 ;src/main.c:64: void main()
-                                    200 ;	---------------------------------
-                                    201 ; Function main
-                                    202 ; ---------------------------------
-      0000A7                        203 _main::
-      0000A7 E8 C0            [16]  204 	add	sp, #-64
-                                    205 ;src/main.c:66: DISPLAY_ON;
-      0000A9 F0r00            [12]  206 	ldh	a, (_LCDC_REG + 0)
-      0000AB F6 80            [ 8]  207 	or	a, #0x80
-      0000AD E0r00            [12]  208 	ldh	(_LCDC_REG + 0), a
-                                    209 ;src/main.c:71: start_time  = time(NULL);
-      0000AF 11 00 00         [12]  210 	ld	de, #0x0000
-      0000B2 CDr00r00         [24]  211 	call	_time
-                                    212 ;src/main.c:75: initrand(start_time);
-      0000B5 06 00            [ 8]  213 	ld	b, #0x00
-      0000B7 C5               [16]  214 	push	bc
-      0000B8 CDr00r00         [24]  215 	call	_initrand
-      0000BB E1               [12]  216 	pop	hl
-                                    217 ;src/main.c:77: gbInitTiles(&state);
-      0000BC 21 00 00         [12]  218 	ld	hl, #0
-      0000BF 39               [ 8]  219 	add	hl, sp
-      0000C0 5D               [ 4]  220 	ld	e, l
-      0000C1 54               [ 4]  221 	ld	d, h
-      0000C2 CDr00r00         [24]  222 	call	_gbInitTiles
-                                    223 ;src/main.c:78: printf("%d\n", countdown);
-      0000C5 11 00 00         [12]  224 	ld	de, #0x0000
-      0000C8 D5               [16]  225 	push	de
-      0000C9 11rF2r00         [12]  226 	ld	de, #___str_1
-      0000CC D5               [16]  227 	push	de
-      0000CD CDr00r00         [24]  228 	call	_printf
-      0000D0 E8 04            [16]  229 	add	sp, #4
-                                    230 ;src/main.c:79: gbPrintTiles(&state);
-      0000D2 21 00 00         [12]  231 	ld	hl, #0
-      0000D5 39               [ 8]  232 	add	hl, sp
-      0000D6 5D               [ 4]  233 	ld	e, l
-      0000D7 54               [ 4]  234 	ld	d, h
-      0000D8 CDr24r00         [24]  235 	call	_gbPrintTiles
-                                    236 ;src/main.c:81: while(1)
-      0000DB                        237 00102$:
-                                    238 ;src/main.c:83: input = joypad();
-      0000DB CDr00r00         [24]  239 	call	_joypad
-                                    240 ;src/main.c:85: rng_val = rand();    
-      0000DE CDr00r00         [24]  241 	call	_rand
-                                    242 ;src/main.c:86: printf("%d\n", rng_val);
-      0000E1 16 00            [ 8]  243 	ld	d, #0x00
-      0000E3 D5               [16]  244 	push	de
-      0000E4 11rF2r00         [12]  245 	ld	de, #___str_1
-      0000E7 D5               [16]  246 	push	de
-      0000E8 CDr00r00         [24]  247 	call	_printf
-      0000EB E8 04            [16]  248 	add	sp, #4
-      0000ED 18 EC            [12]  249 	jr	00102$
-                                    250 ;src/main.c:93: }
-      0000EF E8 40            [16]  251 	add	sp, #64
-      0000F1 C9               [16]  252 	ret
-      0000F2                        253 ___str_1:
-      0000F2 25 64                  254 	.ascii "%d"
-      0000F4 0A                     255 	.db 0x0a
-      0000F5 00                     256 	.db 0x00
-                                    257 	.area _CODE
-                                    258 	.area _INITIALIZER
-                                    259 	.area _CABS (ABS)
+      00005E 26 00            [ 8]  136 	ld	h, #0x00
+                                    137 ;	spillPairReg hl
+                                    138 ;	spillPairReg hl
+      000060 23               [ 8]  139 	inc	hl
+      000061 D5               [16]  140 	push	de
+      000062 01 06 00         [12]  141 	ld	bc, #0x0006
+      000065 5D               [ 4]  142 	ld	e, l
+      000066 54               [ 4]  143 	ld	d, h
+      000067 CDr00r00         [24]  144 	call	__modsint
+      00006A D1               [12]  145 	pop	de
+      00006B 78               [ 4]  146 	ld	a, b
+      00006C B1               [ 4]  147 	or	a, c
+      00006D 20 0A            [12]  148 	jr	NZ, 00106$
+      00006F D5               [16]  149 	push	de
+      000070 3E 0A            [ 8]  150 	ld	a, #0x0a
+      000072 F5               [16]  151 	push	af
+      000073 33               [ 8]  152 	inc	sp
+      000074 CDr00r00         [24]  153 	call	_putchar
+      000077 33               [ 8]  154 	inc	sp
+      000078 D1               [12]  155 	pop	de
+      000079                        156 00106$:
+      000079 F8 01            [12]  157 	ldhl	sp,	#1
+      00007B 34               [12]  158 	inc	(hl)
+      00007C 7E               [ 8]  159 	ld	a, (hl)
+      00007D D6 40            [ 8]  160 	sub	a, #0x40
+      00007F 38 A9            [12]  161 	jr	C, 00108$
+                                    162 ;src/main.c:59: }
+      000081 33               [ 8]  163 	inc	sp
+      000082 33               [ 8]  164 	inc	sp
+      000083 C9               [16]  165 	ret
+      000084                        166 ___str_0:
+      000084 25 63 20               167 	.ascii "%c "
+      000087 00                     168 	.db 0x00
+                                    169 ;src/main.c:61: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
+                                    170 ;	---------------------------------
+                                    171 ; Function gbCountdownSeconds
+                                    172 ; ---------------------------------
+      000088                        173 _gbCountdownSeconds::
+      000088 6F               [ 4]  174 	ld	l, a
+                                    175 ;	spillPairReg hl
+                                    176 ;	spillPairReg hl
+                                    177 ;src/main.c:63: return max_time - ((time(NULL)-start_time) % (max_time+1));
+      000089 E5               [16]  178 	push	hl
+      00008A D5               [16]  179 	push	de
+      00008B 11 00 00         [12]  180 	ld	de, #0x0000
+      00008E CDr00r00         [24]  181 	call	_time
+      000091 D1               [12]  182 	pop	de
+      000092 E1               [12]  183 	pop	hl
+      000093 79               [ 4]  184 	ld	a, c
+      000094 16 00            [ 8]  185 	ld	d, #0x00
+      000096 93               [ 4]  186 	sub	a, e
+      000097 5F               [ 4]  187 	ld	e, a
+      000098 78               [ 4]  188 	ld	a, b
+      000099 9A               [ 4]  189 	sbc	a, d
+      00009A 57               [ 4]  190 	ld	d, a
+      00009B 4D               [ 4]  191 	ld	c, l
+      00009C 06 00            [ 8]  192 	ld	b, #0x00
+      00009E 03               [ 8]  193 	inc	bc
+      00009F E5               [16]  194 	push	hl
+      0000A0 CDr00r00         [24]  195 	call	__moduint
+      0000A3 E1               [12]  196 	pop	hl
+      0000A4 7D               [ 4]  197 	ld	a, l
+      0000A5 91               [ 4]  198 	sub	a, c
+                                    199 ;src/main.c:64: }
+      0000A6 C9               [16]  200 	ret
+                                    201 ;src/main.c:68: void gbFindChanceOfLostPkg(GbGameState *pState)
+                                    202 ;	---------------------------------
+                                    203 ; Function gbFindChanceOfLostPkg
+                                    204 ; ---------------------------------
+      0000A7                        205 _gbFindChanceOfLostPkg::
+      0000A7 E8 FA            [16]  206 	add	sp, #-6
+      0000A9 F8 03            [12]  207 	ldhl	sp,	#3
+      0000AB 7B               [ 4]  208 	ld	a, e
+      0000AC 22               [ 8]  209 	ld	(hl+), a
+      0000AD 72               [ 8]  210 	ld	(hl), d
+                                    211 ;src/main.c:70: U8  chance          = 64,
+      0000AE F8 00            [12]  212 	ldhl	sp,	#0
+                                    213 ;src/main.c:71: modifier        = 0,
+      0000B0 3E 40            [ 8]  214 	ld	a, #0x40
+      0000B2 22               [ 8]  215 	ld	(hl+), a
+      0000B3 36 00            [12]  216 	ld	(hl), #0x00
+                                    217 ;src/main.c:75: GB_ITERATE_MAP(idx, GB_FUNCTION_BODY(
+      0000B5 F8 05            [12]  218 	ldhl	sp,	#5
+      0000B7 36 00            [12]  219 	ld	(hl), #0x00
+      0000B9                        220 00113$:
+      0000B9 F8 05            [12]  221 	ldhl	sp,	#5
+      0000BB 7E               [ 8]  222 	ld	a, (hl)
+      0000BC E6 07            [ 8]  223 	and	a, #0x07
+      0000BE F8 02            [12]  224 	ldhl	sp,	#2
+      0000C0 77               [ 8]  225 	ld	(hl), a
+      0000C1 F8 05            [12]  226 	ldhl	sp,	#5
+      0000C3 5E               [ 8]  227 	ld	e, (hl)
+      0000C4 CB 3B            [ 8]  228 	srl	e
+      0000C6 CB 3B            [ 8]  229 	srl	e
+      0000C8 CB 3B            [ 8]  230 	srl	e
+      0000CA F8 02            [12]  231 	ldhl	sp,	#2
+      0000CC 7E               [ 8]  232 	ld	a, (hl)
+      0000CD D6 06            [ 8]  233 	sub	a, #0x06
+      0000CF 30 7A            [12]  234 	jr	NC, 00111$
+      0000D1 7B               [ 4]  235 	ld	a, e
+      0000D2 D6 08            [ 8]  236 	sub	a, #0x08
+      0000D4 30 75            [12]  237 	jr	NC, 00111$
+      0000D6 4E               [ 8]  238 	ld	c, (hl)
+      0000D7 06 00            [ 8]  239 	ld	b, #0x00
+      0000D9 03               [ 8]  240 	inc	bc
+      0000DA 69               [ 4]  241 	ld	l, c
+                                    242 ;	spillPairReg hl
+                                    243 ;	spillPairReg hl
+      0000DB 50               [ 4]  244 	ld	d, b
+      0000DC D5               [16]  245 	push	de
+      0000DD 01 06 00         [12]  246 	ld	bc, #0x0006
+      0000E0 5D               [ 4]  247 	ld	e, l
+      0000E1 CDr00r00         [24]  248 	call	__modsint
+      0000E4 69               [ 4]  249 	ld	l, c
+                                    250 ;	spillPairReg hl
+                                    251 ;	spillPairReg hl
+      0000E5 D1               [12]  252 	pop	de
+      0000E6 7B               [ 4]  253 	ld	a, e
+      0000E7 D6 05            [ 8]  254 	sub	a, #0x05
+      0000E9 3E 00            [ 8]  255 	ld	a, #0x00
+      0000EB 17               [ 4]  256 	rla
+      0000EC 4F               [ 4]  257 	ld	c, a
+      0000ED 78               [ 4]  258 	ld	a, b
+      0000EE B5               [ 4]  259 	or	a, l
+      0000EF 28 27            [12]  260 	jr	Z, 00109$
+      0000F1 79               [ 4]  261 	ld	a, c
+      0000F2 B7               [ 4]  262 	or	a, a
+      0000F3 28 56            [12]  263 	jr	Z, 00111$
+      0000F5 3E 07            [ 8]  264 	ld	a, #0x07
+      0000F7 93               [ 4]  265 	sub	a, e
+      0000F8 87               [ 4]  266 	add	a, a
+      0000F9 87               [ 4]  267 	add	a, a
+      0000FA 87               [ 4]  268 	add	a, a
+      0000FB F8 02            [12]  269 	ldhl	sp,	#2
+      0000FD 4E               [ 8]  270 	ld	c, (hl)
+      0000FE 23               [ 8]  271 	inc	hl
+      0000FF 81               [ 4]  272 	add	a, c
+      000100 5F               [ 4]  273 	ld	e, a
+      000101 16 00            [ 8]  274 	ld	d, #0x00
+      000103 2A               [ 8]  275 	ld	a,	(hl+)
+      000104 66               [ 8]  276 	ld	h, (hl)
+      000105 6F               [ 4]  277 	ld	l, a
+      000106 19               [ 8]  278 	add	hl, de
+      000107 4D               [ 4]  279 	ld	c, l
+      000108 44               [ 4]  280 	ld	b, h
+      000109 0A               [ 8]  281 	ld	a, (bc)
+      00010A D6 01            [ 8]  282 	sub	a,#0x01
+      00010C 3E 00            [ 8]  283 	ld	a, #0x00
+      00010E 17               [ 4]  284 	rla
+      00010F EE 01            [ 8]  285 	xor	a, #0x01
+      000111 F8 01            [12]  286 	ldhl	sp,	#1
+      000113 4E               [ 8]  287 	ld	c, (hl)
+      000114 81               [ 4]  288 	add	a, c
+      000115 77               [ 8]  289 	ld	(hl), a
+      000116 18 33            [12]  290 	jr	00111$
+      000118                        291 00109$:
+      000118 F8 01            [12]  292 	ldhl	sp,	#1
+      00011A 7E               [ 8]  293 	ld	a, (hl)
+      00011B B7               [ 4]  294 	or	a, a
+      00011C 28 2D            [12]  295 	jr	Z, 00111$
+      00011E 79               [ 4]  296 	ld	a, c
+      00011F B7               [ 4]  297 	or	a, a
+      000120 20 03            [12]  298 	jr	NZ, 00117$
+      000122 11 04 00         [12]  299 	ld	de, #0x0004
+      000125                        300 00117$:
+      000125 F8 05            [12]  301 	ldhl	sp,	#5
+      000127 73               [ 8]  302 	ld	(hl), e
+      000128 CDr00r00         [24]  303 	call	_rand
+      00012B F8 01            [12]  304 	ldhl	sp,	#1
+      00012D 6E               [ 8]  305 	ld	l, (hl)
+      00012E 26 00            [ 8]  306 	ld	h, #0x00
+      000130 29               [ 8]  307 	add	hl, hl
+      000131 29               [ 8]  308 	add	hl, hl
+      000132 16 00            [ 8]  309 	ld	d, #0x00
+      000134 4D               [ 4]  310 	ld	c, l
+      000135 44               [ 4]  311 	ld	b, h
+      000136 CDr00r00         [24]  312 	call	__modsint
+      000139 11r76r01         [12]  313 	ld	de, #_pkgLossFactor
+      00013C F8 05            [12]  314 	ldhl	sp,	#5
+      00013E 6E               [ 8]  315 	ld	l, (hl)
+      00013F 26 00            [ 8]  316 	ld	h, #0x00
+      000141 19               [ 8]  317 	add	hl, de
+      000142 5D               [ 4]  318 	ld	e, l
+      000143 54               [ 4]  319 	ld	d, h
+      000144 1A               [ 8]  320 	ld	a, (de)
+      000145 81               [ 4]  321 	add	a, c
+      000146 F8 00            [12]  322 	ldhl	sp,	#0
+      000148 77               [ 8]  323 	ld	(hl), a
+      000149 18 09            [12]  324 	jr	00112$
+      00014B                        325 00111$:
+      00014B F8 05            [12]  326 	ldhl	sp,	#5
+      00014D 34               [12]  327 	inc	(hl)
+      00014E 7E               [ 8]  328 	ld	a, (hl)
+      00014F D6 40            [ 8]  329 	sub	a, #0x40
+      000151 DArB9r00         [16]  330 	jp	C, 00113$
+      000154                        331 00112$:
+                                    332 ;src/main.c:101: printf("Package loss%%: %d%%\n", (chance*100) / 255);
+      000154 F8 00            [12]  333 	ldhl	sp,	#0
+      000156 4E               [ 8]  334 	ld	c, (hl)
+      000157 06 00            [ 8]  335 	ld	b, #0x00
+      000159 69               [ 4]  336 	ld	l, c
+      00015A 60               [ 4]  337 	ld	h, b
+      00015B 29               [ 8]  338 	add	hl, hl
+      00015C 09               [ 8]  339 	add	hl, bc
+      00015D 29               [ 8]  340 	add	hl, hl
+      00015E 29               [ 8]  341 	add	hl, hl
+      00015F 29               [ 8]  342 	add	hl, hl
+      000160 09               [ 8]  343 	add	hl, bc
+      000161 29               [ 8]  344 	add	hl, hl
+      000162 29               [ 8]  345 	add	hl, hl
+      000163 01 FF 00         [12]  346 	ld	bc, #0x00ff
+      000166 5D               [ 4]  347 	ld	e, l
+      000167 54               [ 4]  348 	ld	d, h
+      000168 CDr00r00         [24]  349 	call	__divsint
+      00016B C5               [16]  350 	push	bc
+      00016C 11r7Br01         [12]  351 	ld	de, #___str_1
+      00016F D5               [16]  352 	push	de
+      000170 CDr00r00         [24]  353 	call	_printf
+                                    354 ;src/main.c:102: }
+      000173 E8 0A            [16]  355 	add	sp, #10
+      000175 C9               [16]  356 	ret
+      000176                        357 _pkgLossFactor:
+      000176 CD                     358 	.db #0xcd	; 205
+      000177 B4                     359 	.db #0xb4	; 180
+      000178 9A                     360 	.db #0x9a	; 154
+      000179 80                     361 	.db #0x80	; 128
+      00017A 40                     362 	.db #0x40	; 64
+      00017B                        363 ___str_1:
+      00017B 50 61 63 6B 61 67 65   364 	.ascii "Package loss%%: %d%%"
+             20 6C 6F 73 73 25 25
+             3A 20 25 64 25 25
+      00018F 0A                     365 	.db 0x0a
+      000190 00                     366 	.db 0x00
+                                    367 ;src/main.c:104: void main()
+                                    368 ;	---------------------------------
+                                    369 ; Function main
+                                    370 ; ---------------------------------
+      000191                        371 _main::
+      000191 E8 C0            [16]  372 	add	sp, #-64
+                                    373 ;src/main.c:106: DISPLAY_ON;
+      000193 F0r00            [12]  374 	ldh	a, (_LCDC_REG + 0)
+      000195 F6 80            [ 8]  375 	or	a, #0x80
+      000197 E0r00            [12]  376 	ldh	(_LCDC_REG + 0), a
+                                    377 ;src/main.c:111: start_time  = time(NULL);
+      000199 11 00 00         [12]  378 	ld	de, #0x0000
+      00019C CDr00r00         [24]  379 	call	_time
+                                    380 ;src/main.c:115: initrand(start_time);
+      00019F 06 00            [ 8]  381 	ld	b, #0x00
+      0001A1 C5               [16]  382 	push	bc
+      0001A2 CDr00r00         [24]  383 	call	_initrand
+      0001A5 E1               [12]  384 	pop	hl
+                                    385 ;src/main.c:117: gbInitTiles(&state);
+      0001A6 F8 00            [12]  386 	ldhl	sp,	#0
+      0001A8 4D               [ 4]  387 	ld	c, l
+      0001A9 44               [ 4]  388 	ld	b, h
+      0001AA 59               [ 4]  389 	ld	e, c
+      0001AB 50               [ 4]  390 	ld	d, b
+      0001AC C5               [16]  391 	push	bc
+      0001AD CDr00r00         [24]  392 	call	_gbInitTiles
+      0001B0 11 00 00         [12]  393 	ld	de, #0x0000
+      0001B3 D5               [16]  394 	push	de
+      0001B4 11rD0r01         [12]  395 	ld	de, #___str_2
+      0001B7 D5               [16]  396 	push	de
+      0001B8 CDr00r00         [24]  397 	call	_printf
+      0001BB E8 04            [16]  398 	add	sp, #4
+      0001BD C1               [12]  399 	pop	bc
+                                    400 ;src/main.c:119: gbPrintTiles(&state);
+      0001BE 59               [ 4]  401 	ld	e, c
+      0001BF 50               [ 4]  402 	ld	d, b
+      0001C0 C5               [16]  403 	push	bc
+      0001C1 CDr24r00         [24]  404 	call	_gbPrintTiles
+                                    405 ;src/main.c:121: gbFindChanceOfLostPkg(&state);
+      0001C4 D1               [12]  406 	pop	de
+      0001C5 CDrA7r00         [24]  407 	call	_gbFindChanceOfLostPkg
+                                    408 ;src/main.c:123: while(1)
+      0001C8                        409 00102$:
+                                    410 ;src/main.c:125: input = joypad();
+      0001C8 CDr00r00         [24]  411 	call	_joypad
+      0001CB 18 FB            [12]  412 	jr	00102$
+                                    413 ;src/main.c:135: }
+      0001CD E8 40            [16]  414 	add	sp, #64
+      0001CF C9               [16]  415 	ret
+      0001D0                        416 ___str_2:
+      0001D0 25 64                  417 	.ascii "%d"
+      0001D2 0A                     418 	.db 0x0a
+      0001D3 00                     419 	.db 0x00
+                                    420 	.area _CODE
+                                    421 	.area _INITIALIZER
+                                    422 	.area _CABS (ABS)

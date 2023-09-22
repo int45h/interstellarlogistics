@@ -37,6 +37,8 @@ typedef struct {
     }
 
 #define GB_FUNCTION_BODY(...) __VA_ARGS__
+#define END_OF_ROW(x) (((x+1) % BOX_W) == 0)
+#define NOT_END_OF_ROW(x) (((x+1) % BOX_W) != 0)
 
 void gbInitTiles(GbGameState *pState)
 {    
@@ -51,7 +53,7 @@ void gbPrintTiles(GbGameState *pState)
     U8 i = 0;
     GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
         printf("%c ", pState->m_map[i]);
-        if (((x+1) % BOX_W) == 0)
+        if (END_OF_ROW(x))
             putchar('\n');
     ));
 }
@@ -59,6 +61,44 @@ void gbPrintTiles(GbGameState *pState)
 U8 gbCountdownSeconds(U8 max_time, U8 start_time)
 {
     return max_time - ((time(NULL)-start_time) % (max_time+1));
+}
+
+const U8 pkgLossFactor[5] = {205, 180, 154, 128, 64};
+
+void gbFindChanceOfLostPkg(GbGameState *pState)
+{
+    U8  chance          = 64,
+        modifier        = 0,
+        lossIdx         = 0,
+        idx             = 0;
+
+    GB_ITERATE_MAP(idx, GB_FUNCTION_BODY(
+        // Go through each row starting from the front
+        // If there are any packages, set the factor
+        // to 7*
+        if (NOT_END_OF_ROW(x))
+        {
+            if (y < 5)
+                modifier += pState->m_map[(7-y)*BOX_TRUEW + x] != 0;
+        }
+        else
+        {
+            if (modifier == 0)
+                continue;
+
+            lossIdx = (y < 5) ? y : 4;
+            modifier = rand()%(modifier<<2);
+
+            // chance of loss = ((7-y)+1)*255/10 + mod(rand(), pkgs_in_row*4)
+            chance = pkgLossFactor[lossIdx] + modifier;
+            modifier = 0;
+
+            // Exit early
+            break;
+        }
+    ));
+
+    printf("Package loss%%: %d%%\n", (chance*100) / 255);
 }
 
 void main()
@@ -78,12 +118,14 @@ void main()
     printf("%d\n", countdown);
     gbPrintTiles(&state);
 
+    gbFindChanceOfLostPkg(&state);
+
     while(1)
     {
         input = joypad();
         //countdown = gbCountdownSeconds(max_time, start_time);
-        rng_val = rand();    
-        printf("%d\n", rng_val);
+        //rng_val = rand();    
+        //printf("%d\n", rng_val);
         //if (!((input & J_UP) > 0))
         //    continue;
     

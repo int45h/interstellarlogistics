@@ -9,15 +9,19 @@ Symbol Table
     .__.H$L.                                                    =  000000 L
     _LCDC_REG                                                      ****** GX
   0 ___str_0                                                       000084 R
-  0 ___str_1                                                       0000F2 R
+  0 ___str_1                                                       00017B R
+  0 ___str_2                                                       0001D0 R
+    __divsint                                                      ****** GX
     __modsint                                                      ****** GX
     __moduint                                                      ****** GX
   0 _gbCountdownSeconds                                            000088 GR
+  0 _gbFindChanceOfLostPkg                                         0000A7 GR
   0 _gbInitTiles                                                   000000 GR
   0 _gbPrintTiles                                                  000024 GR
     _initrand                                                      ****** GX
     _joypad                                                        ****** GX
-  0 _main                                                          0000A7 GR
+  0 _main                                                          000191 GR
+  0 _pkgLossFactor                                                 000176 GR
     _printf                                                        ****** GX
     _putchar                                                       ****** GX
     _rand                                                          ****** GX
@@ -29,7 +33,7 @@ Hexadecimal [24-Bits]
 
 Area Table
 
-   0 _CODE                                      size     F6   flags    0
+   0 _CODE                                      size    1D4   flags    0
    1 _DATA                                      size      0   flags    0
    2 _INITIALIZED                               size      0   flags    0
    3 _DABS                                      size      0   flags    8
