@@ -6,6 +6,8 @@
 #include <rand.h>
 #include <time.h>
 
+#include "utils.h"
+
 #define GB_TRUE     1
 #define GB_FALSE    0
 
@@ -14,11 +16,45 @@ typedef uint8_t     B8;
 typedef uint16_t    U16;
 typedef uint32_t    U32;
 
+typedef uint8_t     P2;
+
 #define BOX_W 6
 #define BOX_H 8
 #define BOX_TRUEW 8
 #define BOX_TRUEH 8
 
+typedef enum {
+    GB_UP,
+    GB_DOWN,
+    GB_LEFT,
+    GB_RIGHT,
+} GbPointDirection;
+
+#define GB_MAX_QUEUE_LENGTH 64
+typedef struct {
+    P2 m_queue[GB_MAX_QUEUE_LENGTH];
+    U8 m_size;
+} GbGameQueue;
+
+B8 gbQueuePush( P2 xy, 
+                GbGameQueue *pQueue)
+{
+    if (pQueue->m_size >= GB_MAX_QUEUE_LENGTH)
+        return FALSE;
+
+    pQueue->m_queue[pQueue->m_size++] = xy;
+    return TRUE;
+}
+
+B8 gbQueuePop(  P2 *xy, 
+                GbGameQueue *pQueue)
+{
+    if (pQueue->m_size == 0)
+        return FALSE;
+
+    *xy = pQueue->m_queue[--pQueue->m_size];
+    return TRUE;
+}
 
 typedef struct {
     U8 m_map[BOX_TRUEW*BOX_TRUEH];
@@ -40,15 +76,28 @@ typedef struct {
 #define END_OF_ROW(x) (((x+1) % BOX_W) == 0)
 #define NOT_END_OF_ROW(x) (((x+1) % BOX_W) != 0)
 
-void gbInitTiles(GbGameState *pState)
+void gbInitMap(GbGameState *pState)
 {    
-    U8 i = 0;
-    GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-        pState->m_map[i] = 'W';
-    ));
+    const U8 COCK_RING[] = 
+    {
+        1,1,0,0,0,0,0,0,
+        1,1,1,1,0,0,0,0,
+        1,1,1,1,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,1,1,0,0,0,
+        0,0,0,1,1,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+    };
+    
+    memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
+    //U8 i = 0;
+    //GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+    //    pState->m_map[i] = 'W';
+    //));
 }
 
-void gbPrintTiles(GbGameState *pState)
+void gbPrintMap(GbGameState *pState)
 {
     U8 i = 0;
     GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
@@ -101,6 +150,123 @@ void gbFindChanceOfLostPkg(GbGameState *pState)
     printf("Package loss%%: %d%%\n", (chance*100) / 255);
 }
 
+
+#define GB_MAKE_POINT2(x,y) (((y&7)<<3)|(x&7))
+
+// Check if point is within the bounds of the map
+B8 gbPointInBounds(P2 xy)
+{
+    return (((xy & 7) < 6) && ((xy >> 3) < 8));
+}
+
+P2 gbSampleDirection(   P2 xy, 
+                        GbPointDirection dir)
+{
+    P2 next_point = xy;
+    switch (dir)
+    {
+        case GB_RIGHT:
+            next_point =    xy + 1;
+            next_point =    (xy & 0x38) | 
+                            (next_point & 0x07);
+            break;
+        case GB_LEFT:
+            next_point =    xy - 1;
+            next_point =    (xy & 0x38) | 
+                            (next_point & 0x07);
+            break;
+        case GB_UP:
+            next_point =    xy + 8;
+            next_point =    (xy & 0x07) | 
+                            (next_point & 0x38);
+            break;
+        case GB_DOWN:
+            next_point =    xy - 8;
+            next_point =    (xy & 0x07) | 
+                            (next_point & 0x38);
+            break;
+    }
+
+    return next_point;
+}
+
+// I LEGITIMATELY HAVE NO CLUE HOW THE FUCK THIS CODE IS ACTUALLY FUNCTIONING
+void gbMapSampleNeighbor(   P2 current_point, 
+                            GbPointDirection dir,
+                            U8 current_color, 
+                            GbGameState *pState,
+                            GbGameQueue *pQueue)
+{
+    P2 next_point = gbSampleDirection(current_point, dir);
+    B8 success = TRUE;
+
+    if (!gbPointInBounds(next_point) || 
+        pState->m_map[next_point] != current_color) // THIS IS A LOAD-BEARING COLOR CHECK. WITHOUT THIS, THE FUNCTION WILL FAIL.
+        return;
+
+    success = gbQueuePush(next_point, pQueue);
+    if (success)
+        return;
+    
+    // FAILURE
+    for (int i = 0; i < pQueue->m_size; i++)
+        printf("queue[%d]: <%d,%d>\n", 
+            i, 
+            pQueue->m_queue[i] & 7,
+            pQueue->m_queue[i] >> 3
+        );
+    
+    gbPrintMap(pState);
+    printf("error: failed to push to queue!");
+}
+
+B8 gbFloodFill( P2 xy, 
+                U8 color,
+                GbGameState *pState)
+{
+    GbGameQueue point_queue;
+    P2  current_point,
+        next_point;
+    U8  current_color,
+        start_color;
+
+    // Initialize queues
+    point_queue.m_size      = 0;
+    
+    // Check if out of bounds, or if the color is already set to the desired color
+    if (!gbPointInBounds(xy) || 
+        pState->m_map[xy] == color)
+        return FALSE;
+
+    // Sample the starting color
+    start_color = pState->m_map[xy];
+
+    // Push the current position to the back of the point and visitor queue
+    gbQueuePush(xy, &point_queue);
+    
+    do
+    {
+        // Pop the last position off the head of the queue, get the color
+        gbQueuePop(&current_point, &point_queue);
+        current_color = pState->m_map[current_point];
+
+        if (start_color != current_color)
+            continue;
+
+        // Set the new color here
+        pState->m_map[current_point] = color;
+
+        // Sample neighbors
+        gbMapSampleNeighbor(current_point, GB_UP,      current_color, pState, &point_queue);
+        gbMapSampleNeighbor(current_point, GB_DOWN,    current_color, pState, &point_queue);
+        gbMapSampleNeighbor(current_point, GB_LEFT,    current_color, pState, &point_queue);
+        gbMapSampleNeighbor(current_point, GB_RIGHT,   current_color, pState, &point_queue);
+    }
+    while (point_queue.m_size != 0);
+
+    return TRUE;
+}
+
 void main()
 {
     DISPLAY_ON;
@@ -114,9 +280,9 @@ void main()
 
     initrand(start_time);
 
-    gbInitTiles(&state);
-    printf("%d\n", countdown);
-    gbPrintTiles(&state);
+    gbInitMap(&state);
+    //printf("%d\n", countdown);
+    gbPrintMap(&state);
 
     gbFindChanceOfLostPkg(&state);
 
