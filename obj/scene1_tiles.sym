@@ -7,21 +7,15 @@ Symbol Table
     .__.ABS.                                                    =  000000 G
     .__.CPU.                                                    =  000000 L
     .__.H$L.                                                    =  000000 L
-    __moduint                                                      ****** GX
-  0 _copy_U8_array                                                 000000 R
-  0 _gbCountdownSeconds                                            000083 GR
-  0 _main                                                          0000A2 GR
-  0 _memcpy                                                        000032 R
-    _scene1Start                                                   ****** GX
-    _scene1Update                                                  ****** GX
-    _time                                                          ****** GX
+  0 _scene1_tilemap                                                000700 GR
+  0 _scene1_tileset                                                000000 GR
 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (GameBoy)                  Page 2
 Hexadecimal [24-Bits]
 
 Area Table
 
-   0 _CODE                                      size     A8   flags    0
+   0 _CODE                                      size    87A   flags    0
    1 _DATA                                      size      0   flags    0
    2 _INITIALIZED                               size      0   flags    0
    3 _DABS                                      size      0   flags    8

@@ -9,1159 +9,214 @@
                                       9 ; Public variables in this module
                                      10 ;--------------------------------------------------------
                                      11 	.globl _main
-                                     12 	.globl _gbFloodFill
-                                     13 	.globl _gbMapSampleNeighbor
-                                     14 	.globl _gbSampleDirection
-                                     15 	.globl _gbPointInBounds
-                                     16 	.globl _gbFindChanceOfLostPkg
-                                     17 	.globl _gbCountdownSeconds
-                                     18 	.globl _gbPrintMap
-                                     19 	.globl _gbInitMap
-                                     20 	.globl _gbQueuePop
-                                     21 	.globl _gbQueuePush
-                                     22 	.globl _time
-                                     23 	.globl _rand
-                                     24 	.globl _initrand
-                                     25 	.globl _printf
-                                     26 	.globl _putchar
-                                     27 	.globl _joypad
-                                     28 	.globl _pkgLossFactor
+                                     12 	.globl _gbCountdownSeconds
+                                     13 	.globl _scene1Update
+                                     14 	.globl _scene1Start
+                                     15 	.globl _time
+                                     16 ;--------------------------------------------------------
+                                     17 ; special function registers
+                                     18 ;--------------------------------------------------------
+                                     19 ;--------------------------------------------------------
+                                     20 ; ram data
+                                     21 ;--------------------------------------------------------
+                                     22 	.area _DATA
+                                     23 ;--------------------------------------------------------
+                                     24 ; ram data
+                                     25 ;--------------------------------------------------------
+                                     26 	.area _INITIALIZED
+                                     27 ;--------------------------------------------------------
+                                     28 ; absolute external ram data
                                      29 ;--------------------------------------------------------
-                                     30 ; special function registers
+                                     30 	.area _DABS (ABS)
                                      31 ;--------------------------------------------------------
-                                     32 ;--------------------------------------------------------
-                                     33 ; ram data
-                                     34 ;--------------------------------------------------------
-                                     35 	.area _DATA
-                                     36 ;--------------------------------------------------------
-                                     37 ; ram data
+                                     32 ; global & static initialisations
+                                     33 ;--------------------------------------------------------
+                                     34 	.area _HOME
+                                     35 	.area _GSINIT
+                                     36 	.area _GSFINAL
+                                     37 	.area _GSINIT
                                      38 ;--------------------------------------------------------
-                                     39 	.area _INITIALIZED
+                                     39 ; Home
                                      40 ;--------------------------------------------------------
-                                     41 ; absolute external ram data
-                                     42 ;--------------------------------------------------------
-                                     43 	.area _DABS (ABS)
-                                     44 ;--------------------------------------------------------
-                                     45 ; global & static initialisations
-                                     46 ;--------------------------------------------------------
-                                     47 	.area _HOME
-                                     48 	.area _GSINIT
-                                     49 	.area _GSFINAL
-                                     50 	.area _GSINIT
-                                     51 ;--------------------------------------------------------
-                                     52 ; Home
-                                     53 ;--------------------------------------------------------
-                                     54 	.area _HOME
-                                     55 	.area _HOME
-                                     56 ;--------------------------------------------------------
-                                     57 ; code
-                                     58 ;--------------------------------------------------------
-                                     59 	.area _CODE
-                                     60 ;src/utils.h:8: static void* memcpy(void *dest, const void *source, uint16_t size)
-                                     61 ;	---------------------------------
-                                     62 ; Function memcpy
-                                     63 ; ---------------------------------
-      000000                         64 _memcpy:
-      000000 E8 F8            [16]   65 	add	sp, #-8
-      000002 F8 06            [12]   66 	ldhl	sp,	#6
-      000004 7B               [ 4]   67 	ld	a, e
-      000005 22               [ 8]   68 	ld	(hl+), a
-      000006 72               [ 8]   69 	ld	(hl), d
-                                     70 ;src/utils.h:10: printf("size: %d\n", size);
-      000007 C5               [16]   71 	push	bc
-      000008 F8 0C            [12]   72 	ldhl	sp,	#12
-      00000A 2A               [ 8]   73 	ld	a, (hl+)
-      00000B 5F               [ 4]   74 	ld	e, a
-      00000C 56               [ 8]   75 	ld	d, (hl)
-      00000D D5               [16]   76 	push	de
-      00000E 11r63r00         [12]   77 	ld	de, #___str_0
-      000011 D5               [16]   78 	push	de
-      000012 CDr00r00         [24]   79 	call	_printf
-      000015 E8 04            [16]   80 	add	sp, #4
-      000017 C1               [12]   81 	pop	bc
-                                     82 ;src/utils.h:12: uint8_t*        dest_u8 = dest;
-      000018 F8 06            [12]   83 	ldhl	sp,	#6
-      00001A 7E               [ 8]   84 	ld	a, (hl)
-      00001B F8 00            [12]   85 	ldhl	sp,	#0
-      00001D 77               [ 8]   86 	ld	(hl), a
-      00001E F8 07            [12]   87 	ldhl	sp,	#7
-      000020 7E               [ 8]   88 	ld	a, (hl)
-      000021 F8 01            [12]   89 	ldhl	sp,	#1
-                                     90 ;src/utils.h:13: const uint8_t*  src_u8  = source;
-      000023 22               [ 8]   91 	ld	(hl+), a
-      000024 79               [ 4]   92 	ld	a, c
-      000025 22               [ 8]   93 	ld	(hl+), a
-      000026 70               [ 8]   94 	ld	(hl), b
-                                     95 ;src/utils.h:15: while (size)
-      000027 F8 0A            [12]   96 	ldhl	sp,	#10
-      000029 2A               [ 8]   97 	ld	a, (hl+)
-      00002A 4F               [ 4]   98 	ld	c, a
-      00002B 46               [ 8]   99 	ld	b, (hl)
-      00002C                        100 00101$:
-      00002C 78               [ 4]  101 	ld	a, b
-      00002D B1               [ 4]  102 	or	a, c
-      00002E 28 29            [12]  103 	jr	Z, 00103$
-                                    104 ;src/utils.h:17: dest_u8[size-1] = src_u8[size-1];
-      000030 59               [ 4]  105 	ld	e, c
-      000031 50               [ 4]  106 	ld	d, b
-      000032 1B               [ 8]  107 	dec	de
-      000033 D5               [16]  108 	push	de
-      000034 F8 02            [12]  109 	ldhl	sp,	#2
-      000036 2A               [ 8]  110 	ld	a,	(hl+)
-      000037 66               [ 8]  111 	ld	h, (hl)
-      000038 6F               [ 4]  112 	ld	l, a
-      000039 19               [ 8]  113 	add	hl, de
-      00003A D1               [12]  114 	pop	de
-      00003B E5               [16]  115 	push	hl
-      00003C 7D               [ 4]  116 	ld	a, l
-      00003D F8 06            [12]  117 	ldhl	sp,	#6
-      00003F 77               [ 8]  118 	ld	(hl), a
-      000040 E1               [12]  119 	pop	hl
-      000041 7C               [ 4]  120 	ld	a, h
-      000042 F8 05            [12]  121 	ldhl	sp,	#5
-      000044 77               [ 8]  122 	ld	(hl), a
-      000045 F8 02            [12]  123 	ldhl	sp,	#2
-      000047 2A               [ 8]  124 	ld	a,	(hl+)
-      000048 66               [ 8]  125 	ld	h, (hl)
-      000049 6F               [ 4]  126 	ld	l, a
-      00004A 19               [ 8]  127 	add	hl, de
-      00004B 5D               [ 4]  128 	ld	e, l
-      00004C 54               [ 4]  129 	ld	d, h
-      00004D 1A               [ 8]  130 	ld	a, (de)
-      00004E F8 04            [12]  131 	ldhl	sp,	#4
-      000050 F5               [16]  132 	push	af
-      000051 2A               [ 8]  133 	ld	a,	(hl+)
-      000052 66               [ 8]  134 	ld	h, (hl)
-      000053 6F               [ 4]  135 	ld	l, a
-      000054 F1               [12]  136 	pop	af
-      000055 77               [ 8]  137 	ld	(hl), a
-                                    138 ;src/utils.h:18: --size;
-      000056 0B               [ 8]  139 	dec	bc
-      000057 18 D3            [12]  140 	jr	00101$
-      000059                        141 00103$:
-                                    142 ;src/utils.h:21: return dest;
-      000059 F8 06            [12]  143 	ldhl	sp,	#6
-      00005B 2A               [ 8]  144 	ld	a, (hl+)
-      00005C 4F               [ 4]  145 	ld	c, a
-      00005D 46               [ 8]  146 	ld	b, (hl)
-                                    147 ;src/utils.h:22: }
-      00005E E8 08            [16]  148 	add	sp, #8
-      000060 E1               [12]  149 	pop	hl
-      000061 F1               [12]  150 	pop	af
-      000062 E9               [ 4]  151 	jp	(hl)
-      000063                        152 ___str_0:
-      000063 73 69 7A 65 3A 20 25   153 	.ascii "size: %d"
-             64
-      00006B 0A                     154 	.db 0x0a
-      00006C 00                     155 	.db 0x00
-                                    156 ;src/main.c:39: B8 gbQueuePush( P2 xy, 
-                                    157 ;	---------------------------------
-                                    158 ; Function gbQueuePush
-                                    159 ; ---------------------------------
-      00006D                        160 _gbQueuePush::
-      00006D 4F               [ 4]  161 	ld	c, a
-                                    162 ;src/main.c:42: if (pQueue->m_size >= GB_MAX_QUEUE_LENGTH)
-      00006E 21 40 00         [12]  163 	ld	hl, #0x0040
-      000071 19               [ 8]  164 	add	hl, de
-      000072 7E               [ 8]  165 	ld	a, (hl)
-      000073 FE 40            [ 8]  166 	cp	a, #0x40
-      000075 38 02            [12]  167 	jr	C, 00102$
-                                    168 ;src/main.c:43: return FALSE;
-      000077 AF               [ 4]  169 	xor	a, a
-      000078 C9               [16]  170 	ret
-      000079                        171 00102$:
-                                    172 ;src/main.c:45: pQueue->m_queue[pQueue->m_size++] = xy;
-      000079 47               [ 4]  173 	ld	b, a
-      00007A 04               [ 4]  174 	inc	b
-      00007B 70               [ 8]  175 	ld	(hl), b
-      00007C 6F               [ 4]  176 	ld	l, a
-      00007D 26 00            [ 8]  177 	ld	h, #0x00
-      00007F 19               [ 8]  178 	add	hl, de
-      000080 71               [ 8]  179 	ld	(hl), c
-                                    180 ;src/main.c:46: return TRUE;
-      000081 3E 01            [ 8]  181 	ld	a, #0x01
-                                    182 ;src/main.c:47: }
-      000083 C9               [16]  183 	ret
-                                    184 ;src/main.c:49: B8 gbQueuePop(  P2 *xy, 
-                                    185 ;	---------------------------------
-                                    186 ; Function gbQueuePop
-                                    187 ; ---------------------------------
-      000084                        188 _gbQueuePop::
-      000084 D5               [16]  189 	push	de
-                                    190 ;src/main.c:52: if (pQueue->m_size == 0)
-      000085 21 40 00         [12]  191 	ld	hl, #0x0040
-      000088 09               [ 8]  192 	add	hl, bc
-      000089 7E               [ 8]  193 	ld	a, (hl)
-                                    194 ;src/main.c:53: return FALSE;
-      00008A B7               [ 4]  195 	or	a,a
-      00008B 28 0C            [12]  196 	jr	Z, 00103$
-                                    197 ;src/main.c:55: *xy = pQueue->m_queue[--pQueue->m_size];
-      00008D 3D               [ 4]  198 	dec	a
-      00008E 77               [ 8]  199 	ld	(hl), a
-      00008F 6F               [ 4]  200 	ld	l, a
-      000090 26 00            [ 8]  201 	ld	h, #0x00
-      000092 09               [ 8]  202 	add	hl, bc
-      000093 4E               [ 8]  203 	ld	c, (hl)
-      000094 E1               [12]  204 	pop	hl
-      000095 E5               [16]  205 	push	hl
-      000096 71               [ 8]  206 	ld	(hl), c
-                                    207 ;src/main.c:56: return TRUE;
-      000097 3E 01            [ 8]  208 	ld	a, #0x01
-      000099                        209 00103$:
-                                    210 ;src/main.c:57: }
-      000099 33               [ 8]  211 	inc	sp
-      00009A 33               [ 8]  212 	inc	sp
-      00009B C9               [16]  213 	ret
-                                    214 ;src/main.c:79: void gbInitMap(GbGameState *pState)
-                                    215 ;	---------------------------------
-                                    216 ; Function gbInitMap
-                                    217 ; ---------------------------------
-      00009C                        218 _gbInitMap::
-      00009C E8 C0            [16]  219 	add	sp, #-64
-      00009E 4B               [ 4]  220 	ld	c, e
-      00009F 42               [ 4]  221 	ld	b, d
-                                    222 ;src/main.c:81: const U8 COCK_RING[] = 
-      0000A0 F8 00            [12]  223 	ldhl	sp,	#0
-      0000A2 3E 01            [ 8]  224 	ld	a,#0x01
-      0000A4 22               [ 8]  225 	ld	(hl+),a
-      0000A5 22               [ 8]  226 	ld	(hl+), a
-      0000A6 AF               [ 4]  227 	xor	a, a
-      0000A7 22               [ 8]  228 	ld	(hl+), a
-      0000A8 AF               [ 4]  229 	xor	a, a
-      0000A9 22               [ 8]  230 	ld	(hl+), a
-      0000AA AF               [ 4]  231 	xor	a, a
-      0000AB 22               [ 8]  232 	ld	(hl+), a
-      0000AC AF               [ 4]  233 	xor	a, a
-      0000AD 22               [ 8]  234 	ld	(hl+), a
-      0000AE AF               [ 4]  235 	xor	a, a
-      0000AF 22               [ 8]  236 	ld	(hl+), a
-      0000B0 AF               [ 4]  237 	xor	a, a
-      0000B1 22               [ 8]  238 	ld	(hl+), a
-      0000B2 3E 01            [ 8]  239 	ld	a,#0x01
-      0000B4 22               [ 8]  240 	ld	(hl+),a
-      0000B5 22               [ 8]  241 	ld	(hl+), a
-      0000B6 3E 01            [ 8]  242 	ld	a,#0x01
-      0000B8 22               [ 8]  243 	ld	(hl+),a
-      0000B9 22               [ 8]  244 	ld	(hl+), a
-      0000BA AF               [ 4]  245 	xor	a, a
-      0000BB 22               [ 8]  246 	ld	(hl+), a
-      0000BC AF               [ 4]  247 	xor	a, a
-      0000BD 22               [ 8]  248 	ld	(hl+), a
-      0000BE AF               [ 4]  249 	xor	a, a
-      0000BF 22               [ 8]  250 	ld	(hl+), a
-      0000C0 AF               [ 4]  251 	xor	a, a
-      0000C1 22               [ 8]  252 	ld	(hl+), a
-      0000C2 3E 01            [ 8]  253 	ld	a,#0x01
-      0000C4 22               [ 8]  254 	ld	(hl+),a
-      0000C5 22               [ 8]  255 	ld	(hl+), a
-      0000C6 3E 01            [ 8]  256 	ld	a,#0x01
-      0000C8 22               [ 8]  257 	ld	(hl+),a
-      0000C9 22               [ 8]  258 	ld	(hl+), a
-      0000CA AF               [ 4]  259 	xor	a, a
-      0000CB 22               [ 8]  260 	ld	(hl+), a
-      0000CC AF               [ 4]  261 	xor	a, a
-      0000CD 22               [ 8]  262 	ld	(hl+), a
-      0000CE AF               [ 4]  263 	xor	a, a
-      0000CF 22               [ 8]  264 	ld	(hl+), a
-      0000D0 AF               [ 4]  265 	xor	a, a
-      0000D1 22               [ 8]  266 	ld	(hl+), a
-      0000D2 AF               [ 4]  267 	xor	a, a
-      0000D3 22               [ 8]  268 	ld	(hl+), a
-      0000D4 AF               [ 4]  269 	xor	a, a
-      0000D5 22               [ 8]  270 	ld	(hl+), a
-      0000D6 AF               [ 4]  271 	xor	a, a
-      0000D7 22               [ 8]  272 	ld	(hl+), a
-      0000D8 AF               [ 4]  273 	xor	a, a
-      0000D9 22               [ 8]  274 	ld	(hl+), a
-      0000DA AF               [ 4]  275 	xor	a, a
-      0000DB 22               [ 8]  276 	ld	(hl+), a
-      0000DC AF               [ 4]  277 	xor	a, a
-      0000DD 22               [ 8]  278 	ld	(hl+), a
-      0000DE AF               [ 4]  279 	xor	a, a
-      0000DF 22               [ 8]  280 	ld	(hl+), a
-      0000E0 AF               [ 4]  281 	xor	a, a
-      0000E1 22               [ 8]  282 	ld	(hl+), a
-      0000E2 AF               [ 4]  283 	xor	a, a
-      0000E3 22               [ 8]  284 	ld	(hl+), a
-      0000E4 AF               [ 4]  285 	xor	a, a
-      0000E5 22               [ 8]  286 	ld	(hl+), a
-      0000E6 AF               [ 4]  287 	xor	a, a
-      0000E7 22               [ 8]  288 	ld	(hl+), a
-      0000E8 3E 01            [ 8]  289 	ld	a,#0x01
-      0000EA 22               [ 8]  290 	ld	(hl+),a
-      0000EB 22               [ 8]  291 	ld	(hl+), a
-      0000EC AF               [ 4]  292 	xor	a, a
-      0000ED 22               [ 8]  293 	ld	(hl+), a
-      0000EE AF               [ 4]  294 	xor	a, a
-      0000EF 22               [ 8]  295 	ld	(hl+), a
-      0000F0 AF               [ 4]  296 	xor	a, a
-      0000F1 22               [ 8]  297 	ld	(hl+), a
-      0000F2 AF               [ 4]  298 	xor	a, a
-      0000F3 22               [ 8]  299 	ld	(hl+), a
-      0000F4 AF               [ 4]  300 	xor	a, a
-      0000F5 22               [ 8]  301 	ld	(hl+), a
-      0000F6 AF               [ 4]  302 	xor	a, a
-      0000F7 22               [ 8]  303 	ld	(hl+), a
-      0000F8 3E 01            [ 8]  304 	ld	a,#0x01
-      0000FA 22               [ 8]  305 	ld	(hl+),a
-      0000FB 22               [ 8]  306 	ld	(hl+), a
-      0000FC AF               [ 4]  307 	xor	a, a
-      0000FD 22               [ 8]  308 	ld	(hl+), a
-      0000FE AF               [ 4]  309 	xor	a, a
-      0000FF 22               [ 8]  310 	ld	(hl+), a
-      000100 AF               [ 4]  311 	xor	a, a
-      000101 22               [ 8]  312 	ld	(hl+), a
-      000102 AF               [ 4]  313 	xor	a, a
-      000103 22               [ 8]  314 	ld	(hl+), a
-      000104 AF               [ 4]  315 	xor	a, a
-      000105 22               [ 8]  316 	ld	(hl+), a
-      000106 AF               [ 4]  317 	xor	a, a
-      000107 22               [ 8]  318 	ld	(hl+), a
-      000108 AF               [ 4]  319 	xor	a, a
-      000109 22               [ 8]  320 	ld	(hl+), a
-      00010A AF               [ 4]  321 	xor	a, a
-      00010B 22               [ 8]  322 	ld	(hl+), a
-      00010C AF               [ 4]  323 	xor	a, a
-      00010D 22               [ 8]  324 	ld	(hl+), a
-      00010E AF               [ 4]  325 	xor	a, a
-      00010F 22               [ 8]  326 	ld	(hl+), a
-      000110 AF               [ 4]  327 	xor	a, a
-      000111 22               [ 8]  328 	ld	(hl+), a
-      000112 AF               [ 4]  329 	xor	a, a
-      000113 22               [ 8]  330 	ld	(hl+), a
-      000114 AF               [ 4]  331 	xor	a, a
-      000115 22               [ 8]  332 	ld	(hl+), a
-      000116 AF               [ 4]  333 	xor	a, a
-      000117 22               [ 8]  334 	ld	(hl+), a
-      000118 AF               [ 4]  335 	xor	a, a
-      000119 22               [ 8]  336 	ld	(hl+), a
-      00011A AF               [ 4]  337 	xor	a, a
-      00011B 22               [ 8]  338 	ld	(hl+), a
-      00011C AF               [ 4]  339 	xor	a, a
-      00011D 22               [ 8]  340 	ld	(hl+), a
-      00011E AF               [ 4]  341 	xor	a, a
-      00011F 22               [ 8]  342 	ld	(hl+), a
-      000120 77               [ 8]  343 	ld	(hl), a
-                                    344 ;src/main.c:93: memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
-      000121 21 00 00         [12]  345 	ld	hl, #0
-      000124 39               [ 8]  346 	add	hl, sp
-      000125 59               [ 4]  347 	ld	e, c
-      000126 50               [ 4]  348 	ld	d, b
-      000127 01 40 00         [12]  349 	ld	bc, #0x0040
-      00012A C5               [16]  350 	push	bc
-      00012B 4D               [ 4]  351 	ld	c, l
-      00012C 44               [ 4]  352 	ld	b, h
-      00012D CDr00r00         [24]  353 	call	_memcpy
-                                    354 ;src/main.c:98: }
-      000130 E8 40            [16]  355 	add	sp, #64
-      000132 C9               [16]  356 	ret
-                                    357 ;src/main.c:100: void gbPrintMap(GbGameState *pState)
-                                    358 ;	---------------------------------
-                                    359 ; Function gbPrintMap
-                                    360 ; ---------------------------------
-      000133                        361 _gbPrintMap::
-      000133 3B               [ 8]  362 	dec	sp
-      000134 3B               [ 8]  363 	dec	sp
-                                    364 ;src/main.c:103: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-      000135 F8 01            [12]  365 	ldhl	sp,	#1
-      000137 36 00            [12]  366 	ld	(hl), #0x00
-      000139                        367 00108$:
-      000139 F8 01            [12]  368 	ldhl	sp,	#1
-      00013B 3A               [ 8]  369 	ld	a, (hl-)
-      00013C E6 07            [ 8]  370 	and	a, #0x07
-      00013E 22               [ 8]  371 	ld	(hl+), a
-      00013F 3A               [ 8]  372 	ld	a, (hl-)
-      000140 4F               [ 4]  373 	ld	c, a
-      000141 CB 39            [ 8]  374 	srl	c
-      000143 CB 39            [ 8]  375 	srl	c
-      000145 CB 39            [ 8]  376 	srl	c
-      000147 7E               [ 8]  377 	ld	a, (hl)
-      000148 D6 06            [ 8]  378 	sub	a, #0x06
-      00014A 30 3C            [12]  379 	jr	NC, 00106$
-      00014C 79               [ 4]  380 	ld	a, c
-      00014D D6 08            [ 8]  381 	sub	a, #0x08
-      00014F 30 37            [12]  382 	jr	NC, 00106$
-      000151 23               [ 8]  383 	inc	hl
-      000152 D5               [16]  384 	push	de
-      000153 6E               [ 8]  385 	ld	l, (hl)
-      000154 26 00            [ 8]  386 	ld	h, #0x00
-      000156 19               [ 8]  387 	add	hl, de
-      000157 D1               [12]  388 	pop	de
-      000158 4D               [ 4]  389 	ld	c, l
-      000159 44               [ 4]  390 	ld	b, h
-      00015A 0A               [ 8]  391 	ld	a, (bc)
-      00015B 4F               [ 4]  392 	ld	c, a
-      00015C 06 00            [ 8]  393 	ld	b, #0x00
-      00015E D5               [16]  394 	push	de
-      00015F C5               [16]  395 	push	bc
-      000160 01r93r01         [12]  396 	ld	bc, #___str_1
-      000163 C5               [16]  397 	push	bc
-      000164 CDr00r00         [24]  398 	call	_printf
-      000167 E8 04            [16]  399 	add	sp, #4
-      000169 D1               [12]  400 	pop	de
-      00016A F8 00            [12]  401 	ldhl	sp,	#0
-      00016C 6E               [ 8]  402 	ld	l, (hl)
-                                    403 ;	spillPairReg hl
-                                    404 ;	spillPairReg hl
-      00016D 26 00            [ 8]  405 	ld	h, #0x00
-                                    406 ;	spillPairReg hl
-                                    407 ;	spillPairReg hl
-      00016F 23               [ 8]  408 	inc	hl
-      000170 D5               [16]  409 	push	de
-      000171 01 06 00         [12]  410 	ld	bc, #0x0006
-      000174 5D               [ 4]  411 	ld	e, l
-      000175 54               [ 4]  412 	ld	d, h
-      000176 CDr00r00         [24]  413 	call	__modsint
-      000179 D1               [12]  414 	pop	de
-      00017A 78               [ 4]  415 	ld	a, b
-      00017B B1               [ 4]  416 	or	a, c
-      00017C 20 0A            [12]  417 	jr	NZ, 00106$
-      00017E D5               [16]  418 	push	de
-      00017F 3E 0A            [ 8]  419 	ld	a, #0x0a
-      000181 F5               [16]  420 	push	af
-      000182 33               [ 8]  421 	inc	sp
-      000183 CDr00r00         [24]  422 	call	_putchar
-      000186 33               [ 8]  423 	inc	sp
-      000187 D1               [12]  424 	pop	de
-      000188                        425 00106$:
-      000188 F8 01            [12]  426 	ldhl	sp,	#1
-      00018A 34               [12]  427 	inc	(hl)
-      00018B 7E               [ 8]  428 	ld	a, (hl)
-      00018C D6 40            [ 8]  429 	sub	a, #0x40
-      00018E 38 A9            [12]  430 	jr	C, 00108$
-                                    431 ;src/main.c:108: }
-      000190 33               [ 8]  432 	inc	sp
-      000191 33               [ 8]  433 	inc	sp
-      000192 C9               [16]  434 	ret
-      000193                        435 ___str_1:
-      000193 25 63 20               436 	.ascii "%c "
-      000196 00                     437 	.db 0x00
-                                    438 ;src/main.c:110: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
-                                    439 ;	---------------------------------
-                                    440 ; Function gbCountdownSeconds
-                                    441 ; ---------------------------------
-      000197                        442 _gbCountdownSeconds::
-      000197 6F               [ 4]  443 	ld	l, a
-                                    444 ;	spillPairReg hl
-                                    445 ;	spillPairReg hl
-                                    446 ;src/main.c:112: return max_time - ((time(NULL)-start_time) % (max_time+1));
-      000198 E5               [16]  447 	push	hl
-      000199 D5               [16]  448 	push	de
-      00019A 11 00 00         [12]  449 	ld	de, #0x0000
-      00019D CDr00r00         [24]  450 	call	_time
-      0001A0 D1               [12]  451 	pop	de
-      0001A1 E1               [12]  452 	pop	hl
-      0001A2 79               [ 4]  453 	ld	a, c
-      0001A3 16 00            [ 8]  454 	ld	d, #0x00
-      0001A5 93               [ 4]  455 	sub	a, e
-      0001A6 5F               [ 4]  456 	ld	e, a
-      0001A7 78               [ 4]  457 	ld	a, b
-      0001A8 9A               [ 4]  458 	sbc	a, d
-      0001A9 57               [ 4]  459 	ld	d, a
-      0001AA 4D               [ 4]  460 	ld	c, l
-      0001AB 06 00            [ 8]  461 	ld	b, #0x00
-      0001AD 03               [ 8]  462 	inc	bc
-      0001AE E5               [16]  463 	push	hl
-      0001AF CDr00r00         [24]  464 	call	__moduint
-      0001B2 E1               [12]  465 	pop	hl
-      0001B3 7D               [ 4]  466 	ld	a, l
-      0001B4 91               [ 4]  467 	sub	a, c
-                                    468 ;src/main.c:113: }
-      0001B5 C9               [16]  469 	ret
-                                    470 ;src/main.c:117: void gbFindChanceOfLostPkg(GbGameState *pState)
-                                    471 ;	---------------------------------
-                                    472 ; Function gbFindChanceOfLostPkg
-                                    473 ; ---------------------------------
-      0001B6                        474 _gbFindChanceOfLostPkg::
-      0001B6 E8 FA            [16]  475 	add	sp, #-6
-      0001B8 F8 03            [12]  476 	ldhl	sp,	#3
-      0001BA 7B               [ 4]  477 	ld	a, e
-      0001BB 22               [ 8]  478 	ld	(hl+), a
-      0001BC 72               [ 8]  479 	ld	(hl), d
-                                    480 ;src/main.c:119: U8  chance          = 64,
-      0001BD F8 00            [12]  481 	ldhl	sp,	#0
-                                    482 ;src/main.c:120: modifier        = 0,
-      0001BF 3E 40            [ 8]  483 	ld	a, #0x40
-      0001C1 22               [ 8]  484 	ld	(hl+), a
-      0001C2 36 00            [12]  485 	ld	(hl), #0x00
-                                    486 ;src/main.c:124: GB_ITERATE_MAP(idx, GB_FUNCTION_BODY(
-      0001C4 F8 05            [12]  487 	ldhl	sp,	#5
-      0001C6 36 00            [12]  488 	ld	(hl), #0x00
-      0001C8                        489 00113$:
-      0001C8 F8 05            [12]  490 	ldhl	sp,	#5
-      0001CA 7E               [ 8]  491 	ld	a, (hl)
-      0001CB E6 07            [ 8]  492 	and	a, #0x07
-      0001CD F8 02            [12]  493 	ldhl	sp,	#2
-      0001CF 77               [ 8]  494 	ld	(hl), a
-      0001D0 F8 05            [12]  495 	ldhl	sp,	#5
-      0001D2 5E               [ 8]  496 	ld	e, (hl)
-      0001D3 CB 3B            [ 8]  497 	srl	e
-      0001D5 CB 3B            [ 8]  498 	srl	e
-      0001D7 CB 3B            [ 8]  499 	srl	e
-      0001D9 F8 02            [12]  500 	ldhl	sp,	#2
-      0001DB 7E               [ 8]  501 	ld	a, (hl)
-      0001DC D6 06            [ 8]  502 	sub	a, #0x06
-      0001DE 30 7A            [12]  503 	jr	NC, 00111$
-      0001E0 7B               [ 4]  504 	ld	a, e
-      0001E1 D6 08            [ 8]  505 	sub	a, #0x08
-      0001E3 30 75            [12]  506 	jr	NC, 00111$
-      0001E5 4E               [ 8]  507 	ld	c, (hl)
-      0001E6 06 00            [ 8]  508 	ld	b, #0x00
-      0001E8 03               [ 8]  509 	inc	bc
-      0001E9 69               [ 4]  510 	ld	l, c
-                                    511 ;	spillPairReg hl
-                                    512 ;	spillPairReg hl
-      0001EA 50               [ 4]  513 	ld	d, b
-      0001EB D5               [16]  514 	push	de
-      0001EC 01 06 00         [12]  515 	ld	bc, #0x0006
-      0001EF 5D               [ 4]  516 	ld	e, l
-      0001F0 CDr00r00         [24]  517 	call	__modsint
-      0001F3 69               [ 4]  518 	ld	l, c
-                                    519 ;	spillPairReg hl
-                                    520 ;	spillPairReg hl
-      0001F4 D1               [12]  521 	pop	de
-      0001F5 7B               [ 4]  522 	ld	a, e
-      0001F6 D6 05            [ 8]  523 	sub	a, #0x05
-      0001F8 3E 00            [ 8]  524 	ld	a, #0x00
-      0001FA 17               [ 4]  525 	rla
-      0001FB 4F               [ 4]  526 	ld	c, a
-      0001FC 78               [ 4]  527 	ld	a, b
-      0001FD B5               [ 4]  528 	or	a, l
-      0001FE 28 27            [12]  529 	jr	Z, 00109$
-      000200 79               [ 4]  530 	ld	a, c
-      000201 B7               [ 4]  531 	or	a, a
-      000202 28 56            [12]  532 	jr	Z, 00111$
-      000204 3E 07            [ 8]  533 	ld	a, #0x07
-      000206 93               [ 4]  534 	sub	a, e
-      000207 87               [ 4]  535 	add	a, a
-      000208 87               [ 4]  536 	add	a, a
-      000209 87               [ 4]  537 	add	a, a
-      00020A F8 02            [12]  538 	ldhl	sp,	#2
-      00020C 4E               [ 8]  539 	ld	c, (hl)
-      00020D 23               [ 8]  540 	inc	hl
-      00020E 81               [ 4]  541 	add	a, c
-      00020F 5F               [ 4]  542 	ld	e, a
-      000210 16 00            [ 8]  543 	ld	d, #0x00
-      000212 2A               [ 8]  544 	ld	a,	(hl+)
-      000213 66               [ 8]  545 	ld	h, (hl)
-      000214 6F               [ 4]  546 	ld	l, a
-      000215 19               [ 8]  547 	add	hl, de
-      000216 4D               [ 4]  548 	ld	c, l
-      000217 44               [ 4]  549 	ld	b, h
-      000218 0A               [ 8]  550 	ld	a, (bc)
-      000219 D6 01            [ 8]  551 	sub	a,#0x01
-      00021B 3E 00            [ 8]  552 	ld	a, #0x00
-      00021D 17               [ 4]  553 	rla
-      00021E EE 01            [ 8]  554 	xor	a, #0x01
-      000220 F8 01            [12]  555 	ldhl	sp,	#1
-      000222 4E               [ 8]  556 	ld	c, (hl)
-      000223 81               [ 4]  557 	add	a, c
-      000224 77               [ 8]  558 	ld	(hl), a
-      000225 18 33            [12]  559 	jr	00111$
-      000227                        560 00109$:
-      000227 F8 01            [12]  561 	ldhl	sp,	#1
-      000229 7E               [ 8]  562 	ld	a, (hl)
-      00022A B7               [ 4]  563 	or	a, a
-      00022B 28 2D            [12]  564 	jr	Z, 00111$
-      00022D 79               [ 4]  565 	ld	a, c
-      00022E B7               [ 4]  566 	or	a, a
-      00022F 20 03            [12]  567 	jr	NZ, 00117$
-      000231 11 04 00         [12]  568 	ld	de, #0x0004
-      000234                        569 00117$:
-      000234 F8 05            [12]  570 	ldhl	sp,	#5
-      000236 73               [ 8]  571 	ld	(hl), e
-      000237 CDr00r00         [24]  572 	call	_rand
-      00023A F8 01            [12]  573 	ldhl	sp,	#1
-      00023C 6E               [ 8]  574 	ld	l, (hl)
-      00023D 26 00            [ 8]  575 	ld	h, #0x00
-      00023F 29               [ 8]  576 	add	hl, hl
-      000240 29               [ 8]  577 	add	hl, hl
-      000241 16 00            [ 8]  578 	ld	d, #0x00
-      000243 4D               [ 4]  579 	ld	c, l
-      000244 44               [ 4]  580 	ld	b, h
-      000245 CDr00r00         [24]  581 	call	__modsint
-      000248 11r85r02         [12]  582 	ld	de, #_pkgLossFactor
-      00024B F8 05            [12]  583 	ldhl	sp,	#5
-      00024D 6E               [ 8]  584 	ld	l, (hl)
-      00024E 26 00            [ 8]  585 	ld	h, #0x00
-      000250 19               [ 8]  586 	add	hl, de
-      000251 5D               [ 4]  587 	ld	e, l
-      000252 54               [ 4]  588 	ld	d, h
-      000253 1A               [ 8]  589 	ld	a, (de)
-      000254 81               [ 4]  590 	add	a, c
-      000255 F8 00            [12]  591 	ldhl	sp,	#0
-      000257 77               [ 8]  592 	ld	(hl), a
-      000258 18 09            [12]  593 	jr	00112$
-      00025A                        594 00111$:
-      00025A F8 05            [12]  595 	ldhl	sp,	#5
-      00025C 34               [12]  596 	inc	(hl)
-      00025D 7E               [ 8]  597 	ld	a, (hl)
-      00025E D6 40            [ 8]  598 	sub	a, #0x40
-      000260 DArC8r01         [16]  599 	jp	C, 00113$
-      000263                        600 00112$:
-                                    601 ;src/main.c:150: printf("Package loss%%: %d%%\n", (chance*100) / 255);
-      000263 F8 00            [12]  602 	ldhl	sp,	#0
-      000265 4E               [ 8]  603 	ld	c, (hl)
-      000266 06 00            [ 8]  604 	ld	b, #0x00
-      000268 69               [ 4]  605 	ld	l, c
-      000269 60               [ 4]  606 	ld	h, b
-      00026A 29               [ 8]  607 	add	hl, hl
-      00026B 09               [ 8]  608 	add	hl, bc
-      00026C 29               [ 8]  609 	add	hl, hl
-      00026D 29               [ 8]  610 	add	hl, hl
-      00026E 29               [ 8]  611 	add	hl, hl
-      00026F 09               [ 8]  612 	add	hl, bc
-      000270 29               [ 8]  613 	add	hl, hl
-      000271 29               [ 8]  614 	add	hl, hl
-      000272 01 FF 00         [12]  615 	ld	bc, #0x00ff
-      000275 5D               [ 4]  616 	ld	e, l
-      000276 54               [ 4]  617 	ld	d, h
-      000277 CDr00r00         [24]  618 	call	__divsint
-      00027A C5               [16]  619 	push	bc
-      00027B 11r8Ar02         [12]  620 	ld	de, #___str_2
-      00027E D5               [16]  621 	push	de
-      00027F CDr00r00         [24]  622 	call	_printf
-                                    623 ;src/main.c:151: }
-      000282 E8 0A            [16]  624 	add	sp, #10
-      000284 C9               [16]  625 	ret
-      000285                        626 _pkgLossFactor:
-      000285 CD                     627 	.db #0xcd	; 205
-      000286 B4                     628 	.db #0xb4	; 180
-      000287 9A                     629 	.db #0x9a	; 154
-      000288 80                     630 	.db #0x80	; 128
-      000289 40                     631 	.db #0x40	; 64
-      00028A                        632 ___str_2:
-      00028A 50 61 63 6B 61 67 65   633 	.ascii "Package loss%%: %d%%"
-             20 6C 6F 73 73 25 25
-             3A 20 25 64 25 25
-      00029E 0A                     634 	.db 0x0a
-      00029F 00                     635 	.db 0x00
-                                    636 ;src/main.c:157: B8 gbPointInBounds(P2 xy)
-                                    637 ;	---------------------------------
-                                    638 ; Function gbPointInBounds
-                                    639 ; ---------------------------------
-      0002A0                        640 _gbPointInBounds::
-                                    641 ;src/main.c:159: return (((xy & 7) < 6) && ((xy >> 3) < 8));
-      0002A0 4F               [ 4]  642 	ld	c, a
-      0002A1 E6 07            [ 8]  643 	and	a, #0x07
-      0002A3 D6 06            [ 8]  644 	sub	a, #0x06
-      0002A5 30 0A            [12]  645 	jr	NC, 00103$
-      0002A7 79               [ 4]  646 	ld	a, c
-      0002A8 CB 37            [ 8]  647 	swap	a
-      0002AA 07               [ 4]  648 	rlca
-      0002AB E6 1F            [ 8]  649 	and	a, #0x1f
-      0002AD D6 08            [ 8]  650 	sub	a, #0x08
-      0002AF 38 02            [12]  651 	jr	C, 00104$
-      0002B1                        652 00103$:
-      0002B1 AF               [ 4]  653 	xor	a, a
-      0002B2 C9               [16]  654 	ret
-      0002B3                        655 00104$:
-      0002B3 3E 01            [ 8]  656 	ld	a, #0x01
-                                    657 ;src/main.c:160: }
-      0002B5 C9               [16]  658 	ret
-                                    659 ;src/main.c:162: P2 gbSampleDirection(   P2 xy, 
-                                    660 ;	---------------------------------
-                                    661 ; Function gbSampleDirection
-                                    662 ; ---------------------------------
-      0002B6                        663 _gbSampleDirection::
-      0002B6 3B               [ 8]  664 	dec	sp
-      0002B7 3B               [ 8]  665 	dec	sp
-      0002B8 4F               [ 4]  666 	ld	c, a
-      0002B9 7B               [ 4]  667 	ld	a, e
-                                    668 ;src/main.c:165: P2 next_point = xy;
-      0002BA 59               [ 4]  669 	ld	e, c
-                                    670 ;src/main.c:169: next_point =    xy + 1;
-      0002BB F8 00            [12]  671 	ldhl	sp,	#0
-      0002BD 71               [ 8]  672 	ld	(hl), c
-                                    673 ;src/main.c:180: next_point =    (xy & 0x07) | 
-      0002BE 23               [ 8]  674 	inc	hl
-      0002BF F5               [16]  675 	push	af
-      0002C0 79               [ 4]  676 	ld	a, c
-      0002C1 E6 07            [ 8]  677 	and	a, #0x07
-      0002C3 77               [ 8]  678 	ld	(hl), a
-      0002C4 F1               [12]  679 	pop	af
-                                    680 ;src/main.c:166: switch (dir)
-      0002C5 B7               [ 4]  681 	or	a, a
-      0002C6 28 25            [12]  682 	jr	Z, 00103$
-      0002C8 FE 01            [ 8]  683 	cp	a, #0x01
-      0002CA 28 2C            [12]  684 	jr	Z, 00104$
-                                    685 ;src/main.c:170: next_point =    (xy & 0x38) | 
-      0002CC F5               [16]  686 	push	af
-      0002CD 79               [ 4]  687 	ld	a, c
-      0002CE E6 38            [ 8]  688 	and	a, #0x38
-      0002D0 4F               [ 4]  689 	ld	c, a
-      0002D1 F1               [12]  690 	pop	af
-                                    691 ;src/main.c:166: switch (dir)
-      0002D2 FE 02            [ 8]  692 	cp	a, #0x02
-      0002D4 28 0D            [12]  693 	jr	Z, 00102$
-      0002D6 D6 03            [ 8]  694 	sub	a, #0x03
-      0002D8 20 27            [12]  695 	jr	NZ, 00105$
-                                    696 ;src/main.c:169: next_point =    xy + 1;
-      0002DA 2B               [ 8]  697 	dec	hl
-      0002DB 7E               [ 8]  698 	ld	a, (hl)
-      0002DC 3C               [ 4]  699 	inc	a
-                                    700 ;src/main.c:171: (next_point & 0x07);
-      0002DD E6 07            [ 8]  701 	and	a, #0x07
-      0002DF B1               [ 4]  702 	or	a, c
-      0002E0 5F               [ 4]  703 	ld	e, a
-                                    704 ;src/main.c:172: break;
-      0002E1 18 1E            [12]  705 	jr	00105$
-                                    706 ;src/main.c:173: case GB_LEFT:
-      0002E3                        707 00102$:
-                                    708 ;src/main.c:174: next_point =    xy - 1;
-      0002E3 F8 00            [12]  709 	ldhl	sp,	#0
-      0002E5 7E               [ 8]  710 	ld	a, (hl)
-      0002E6 3D               [ 4]  711 	dec	a
-                                    712 ;src/main.c:176: (next_point & 0x07);
-      0002E7 E6 07            [ 8]  713 	and	a, #0x07
-      0002E9 B1               [ 4]  714 	or	a, c
-      0002EA 5F               [ 4]  715 	ld	e, a
-                                    716 ;src/main.c:177: break;
-      0002EB 18 14            [12]  717 	jr	00105$
-                                    718 ;src/main.c:178: case GB_UP:
-      0002ED                        719 00103$:
-                                    720 ;src/main.c:179: next_point =    xy + 8;
-      0002ED F8 00            [12]  721 	ldhl	sp,	#0
-                                    722 ;src/main.c:181: (next_point & 0x38);
-      0002EF 2A               [ 8]  723 	ld	a, (hl+)
-      0002F0 C6 08            [ 8]  724 	add	a, #0x08
-      0002F2 E6 38            [ 8]  725 	and	a, #0x38
-      0002F4 B6               [ 8]  726 	or	a, (hl)
-      0002F5 5F               [ 4]  727 	ld	e, a
-                                    728 ;src/main.c:182: break;
-      0002F6 18 09            [12]  729 	jr	00105$
-                                    730 ;src/main.c:183: case GB_DOWN:
-      0002F8                        731 00104$:
-                                    732 ;src/main.c:184: next_point =    xy - 8;
-      0002F8 F8 00            [12]  733 	ldhl	sp,	#0
-                                    734 ;src/main.c:186: (next_point & 0x38);
-      0002FA 2A               [ 8]  735 	ld	a, (hl+)
-      0002FB C6 F8            [ 8]  736 	add	a, #0xf8
-      0002FD E6 38            [ 8]  737 	and	a, #0x38
-      0002FF B6               [ 8]  738 	or	a, (hl)
-      000300 5F               [ 4]  739 	ld	e, a
-                                    740 ;src/main.c:188: }
-      000301                        741 00105$:
-                                    742 ;src/main.c:190: return next_point;
-      000301 7B               [ 4]  743 	ld	a, e
-                                    744 ;src/main.c:191: }
-      000302 33               [ 8]  745 	inc	sp
-      000303 33               [ 8]  746 	inc	sp
-      000304 C9               [16]  747 	ret
-                                    748 ;src/main.c:194: void gbMapSampleNeighbor(   P2 current_point, 
-                                    749 ;	---------------------------------
-                                    750 ; Function gbMapSampleNeighbor
-                                    751 ; ---------------------------------
-      000305                        752 _gbMapSampleNeighbor::
-      000305 E8 F8            [16]  753 	add	sp, #-8
-                                    754 ;src/main.c:200: P2 next_point = gbSampleDirection(current_point, dir);
-      000307 CDrB6r02         [24]  755 	call	_gbSampleDirection
-      00030A 4F               [ 4]  756 	ld	c, a
-                                    757 ;src/main.c:203: if (!gbPointInBounds(next_point) || 
-      00030B C5               [16]  758 	push	bc
-      00030C 79               [ 4]  759 	ld	a, c
-      00030D CDrA0r02         [24]  760 	call	_gbPointInBounds
-      000310 C1               [12]  761 	pop	bc
-      000311 B7               [ 4]  762 	or	a, a
-      000312 CArC2r03         [16]  763 	jp	Z,00110$
-                                    764 ;src/main.c:204: pState->m_map[next_point] != current_color) // THIS IS A LOAD-BEARING COLOR CHECK. WITHOUT THIS, THE FUNCTION WILL FAIL.
-      000315 F8 0B            [12]  765 	ldhl	sp,	#11
-      000317 7E               [ 8]  766 	ld	a, (hl)
-      000318 F8 00            [12]  767 	ldhl	sp,	#0
-      00031A 77               [ 8]  768 	ld	(hl), a
-      00031B F8 0C            [12]  769 	ldhl	sp,	#12
-      00031D 7E               [ 8]  770 	ld	a, (hl)
-      00031E F8 01            [12]  771 	ldhl	sp,	#1
-      000320 77               [ 8]  772 	ld	(hl), a
-      000321 D1               [12]  773 	pop	de
-      000322 D5               [16]  774 	push	de
-      000323 69               [ 4]  775 	ld	l, c
-      000324 26 00            [ 8]  776 	ld	h, #0x00
-      000326 19               [ 8]  777 	add	hl, de
-      000327 5D               [ 4]  778 	ld	e, l
-      000328 54               [ 4]  779 	ld	d, h
-      000329 1A               [ 8]  780 	ld	a, (de)
-      00032A 47               [ 4]  781 	ld	b, a
-      00032B F8 0A            [12]  782 	ldhl	sp,	#10
-      00032D 7E               [ 8]  783 	ld	a, (hl)
-      00032E 90               [ 4]  784 	sub	a, b
-                                    785 ;src/main.c:205: return;
-      00032F C2rC2r03         [16]  786 	jp	NZ,00110$
-                                    787 ;src/main.c:207: success = gbQueuePush(next_point, pQueue);
-      000332 F8 0D            [12]  788 	ldhl	sp,	#13
-      000334 2A               [ 8]  789 	ld	a, (hl+)
-      000335 5F               [ 4]  790 	ld	e, a
-      000336 56               [ 8]  791 	ld	d, (hl)
-      000337 79               [ 4]  792 	ld	a, c
-      000338 CDr6Dr00         [24]  793 	call	_gbQueuePush
-                                    794 ;src/main.c:208: if (success)
-      00033B B7               [ 4]  795 	or	a, a
-                                    796 ;src/main.c:209: return;
-                                    797 ;src/main.c:212: for (int i = 0; i < pQueue->m_size; i++)
-      00033C C2rC2r03         [16]  798 	jp	NZ,00110$
-      00033F F8 0D            [12]  799 	ldhl	sp,	#13
-      000341 2A               [ 8]  800 	ld	a, (hl+)
-      000342 4F               [ 4]  801 	ld	c, a
-      000343 46               [ 8]  802 	ld	b, (hl)
-      000344 21 40 00         [12]  803 	ld	hl, #0x0040
-      000347 09               [ 8]  804 	add	hl, bc
-      000348 E5               [16]  805 	push	hl
-      000349 7D               [ 4]  806 	ld	a, l
-      00034A F8 04            [12]  807 	ldhl	sp,	#4
-      00034C 77               [ 8]  808 	ld	(hl), a
-      00034D E1               [12]  809 	pop	hl
-      00034E 7C               [ 4]  810 	ld	a, h
-      00034F F8 03            [12]  811 	ldhl	sp,	#3
-      000351 77               [ 8]  812 	ld	(hl), a
-      000352 AF               [ 4]  813 	xor	a, a
-      000353 F8 06            [12]  814 	ldhl	sp,	#6
-      000355 22               [ 8]  815 	ld	(hl+), a
-      000356 77               [ 8]  816 	ld	(hl), a
-      000357                        817 00108$:
-      000357 F8 02            [12]  818 	ldhl	sp,#2
-      000359 2A               [ 8]  819 	ld	a, (hl+)
-      00035A 5F               [ 4]  820 	ld	e, a
-      00035B 2A               [ 8]  821 	ld	a, (hl+)
-      00035C 57               [ 4]  822 	ld	d, a
-      00035D 1A               [ 8]  823 	ld	a, (de)
-      00035E 22               [ 8]  824 	ld	(hl+), a
-      00035F 36 00            [12]  825 	ld	(hl), #0x00
-      000361 F8 06            [12]  826 	ldhl	sp,	#6
-      000363 5D               [ 4]  827 	ld	e, l
-      000364 54               [ 4]  828 	ld	d, h
-      000365 F8 04            [12]  829 	ldhl	sp,	#4
-      000367 1A               [ 8]  830 	ld	a, (de)
-      000368 13               [ 8]  831 	inc	de
-      000369 96               [ 8]  832 	sub	a, (hl)
-      00036A 23               [ 8]  833 	inc	hl
-      00036B 1A               [ 8]  834 	ld	a, (de)
-      00036C 9E               [ 8]  835 	sbc	a, (hl)
-      00036D 1A               [ 8]  836 	ld	a, (de)
-      00036E 57               [ 4]  837 	ld	d, a
-      00036F CB 7E            [12]  838 	bit	7, (hl)
-      000371 28 07            [12]  839 	jr	Z, 00142$
-      000373 CB 7A            [ 8]  840 	bit	7, d
-      000375 20 08            [12]  841 	jr	NZ, 00143$
-      000377 BF               [ 4]  842 	cp	a, a
-      000378 18 05            [12]  843 	jr	00143$
-      00037A                        844 00142$:
-      00037A CB 7A            [ 8]  845 	bit	7, d
-      00037C 28 01            [12]  846 	jr	Z, 00143$
-      00037E 37               [ 4]  847 	scf
-      00037F                        848 00143$:
-      00037F 30 34            [12]  849 	jr	NC, 00106$
-                                    850 ;src/main.c:216: pQueue->m_queue[i] >> 3
-      000381 F8 06            [12]  851 	ldhl	sp,	#6
-      000383 2A               [ 8]  852 	ld	a,	(hl+)
-      000384 66               [ 8]  853 	ld	h, (hl)
-      000385 6F               [ 4]  854 	ld	l, a
-      000386 09               [ 8]  855 	add	hl, bc
-      000387 5D               [ 4]  856 	ld	e, l
-      000388 54               [ 4]  857 	ld	d, h
-      000389 1A               [ 8]  858 	ld	a, (de)
-      00038A F5               [16]  859 	push	af
-      00038B CB 37            [ 8]  860 	swap	a
-      00038D 07               [ 4]  861 	rlca
-      00038E E6 1F            [ 8]  862 	and	a, #0x1f
-      000390 5F               [ 4]  863 	ld	e, a
-      000391 F1               [12]  864 	pop	af
-      000392 16 00            [ 8]  865 	ld	d, #0x00
-                                    866 ;src/main.c:215: pQueue->m_queue[i] & 7,
-                                    867 ;	spillPairReg hl
-                                    868 ;	spillPairReg hl
-      000394 E6 07            [ 8]  869 	and	a, #0x07
-      000396 6F               [ 4]  870 	ld	l, a
-                                    871 ;	spillPairReg hl
-                                    872 ;	spillPairReg hl
-      000397 26 00            [ 8]  873 	ld	h, #0x00
-                                    874 ;	spillPairReg hl
-                                    875 ;	spillPairReg hl
-                                    876 ;src/main.c:213: printf("queue[%d]: <%d,%d>\n", 
-      000399 C5               [16]  877 	push	bc
-      00039A D5               [16]  878 	push	de
-      00039B E5               [16]  879 	push	hl
-      00039C F8 0C            [12]  880 	ldhl	sp,	#12
-      00039E 2A               [ 8]  881 	ld	a, (hl+)
-      00039F 5F               [ 4]  882 	ld	e, a
-      0003A0 56               [ 8]  883 	ld	d, (hl)
-      0003A1 D5               [16]  884 	push	de
-      0003A2 11rC8r03         [12]  885 	ld	de, #___str_3
-      0003A5 D5               [16]  886 	push	de
-      0003A6 CDr00r00         [24]  887 	call	_printf
-      0003A9 E8 08            [16]  888 	add	sp, #8
-      0003AB C1               [12]  889 	pop	bc
-                                    890 ;src/main.c:212: for (int i = 0; i < pQueue->m_size; i++)
-      0003AC F8 06            [12]  891 	ldhl	sp,	#6
-      0003AE 34               [12]  892 	inc	(hl)
-      0003AF 20 A6            [12]  893 	jr	NZ, 00108$
-      0003B1 23               [ 8]  894 	inc	hl
-      0003B2 34               [12]  895 	inc	(hl)
-      0003B3 18 A2            [12]  896 	jr	00108$
-      0003B5                        897 00106$:
-                                    898 ;src/main.c:219: gbPrintMap(pState);
-      0003B5 D1               [12]  899 	pop	de
-      0003B6 D5               [16]  900 	push	de
-      0003B7 CDr33r01         [24]  901 	call	_gbPrintMap
-                                    902 ;src/main.c:220: printf("error: failed to push to queue!");
-      0003BA 11rDCr03         [12]  903 	ld	de, #___str_4
-      0003BD D5               [16]  904 	push	de
-      0003BE CDr00r00         [24]  905 	call	_printf
-      0003C1 E1               [12]  906 	pop	hl
-      0003C2                        907 00110$:
-                                    908 ;src/main.c:221: }
-      0003C2 E8 08            [16]  909 	add	sp, #8
-      0003C4 E1               [12]  910 	pop	hl
-      0003C5 E8 05            [16]  911 	add	sp, #5
-      0003C7 E9               [ 4]  912 	jp	(hl)
-      0003C8                        913 ___str_3:
-      0003C8 71 75 65 75 65 5B 25   914 	.ascii "queue[%d]: <%d,%d>"
-             64 5D 3A 20 3C 25 64
-             2C 25 64 3E
-      0003DA 0A                     915 	.db 0x0a
-      0003DB 00                     916 	.db 0x00
-      0003DC                        917 ___str_4:
-      0003DC 65 72 72 6F 72 3A 20   918 	.ascii "error: failed to push to queue!"
-             66 61 69 6C 65 64 20
-             74 6F 20 70 75 73 68
-             20 74 6F 20 71 75 65
-             75 65 21
-      0003FB 00                     919 	.db 0x00
-                                    920 ;src/main.c:223: B8 gbFloodFill( P2 xy, 
-                                    921 ;	---------------------------------
-                                    922 ; Function gbFloodFill
-                                    923 ; ---------------------------------
-      0003FC                        924 _gbFloodFill::
-      0003FC E8 B6            [16]  925 	add	sp, #-74
-      0003FE F8 49            [12]  926 	ldhl	sp,	#73
-      000400 32               [ 8]  927 	ld	(hl-), a
-      000401 73               [ 8]  928 	ld	(hl), e
-                                    929 ;src/main.c:234: point_queue.m_size      = 0;
-      000402 F8 40            [12]  930 	ldhl	sp,	#64
-      000404 36 00            [12]  931 	ld	(hl), #0x00
-                                    932 ;src/main.c:237: if (!gbPointInBounds(xy) || 
-      000406 F8 49            [12]  933 	ldhl	sp,	#73
-      000408 7E               [ 8]  934 	ld	a, (hl)
-      000409 CDrA0r02         [24]  935 	call	_gbPointInBounds
-      00040C F8 47            [12]  936 	ldhl	sp,#71
-      00040E 77               [ 8]  937 	ld	(hl), a
-      00040F B7               [ 4]  938 	or	a, a
-      000410 28 1F            [12]  939 	jr	Z, 00101$
-                                    940 ;src/main.c:238: pState->m_map[xy] == color)
-      000412 F8 4C            [12]  941 	ldhl	sp,	#76
-      000414 7E               [ 8]  942 	ld	a, (hl)
-      000415 F8 42            [12]  943 	ldhl	sp,	#66
-      000417 77               [ 8]  944 	ld	(hl), a
-      000418 F8 4D            [12]  945 	ldhl	sp,	#77
-      00041A 7E               [ 8]  946 	ld	a, (hl)
-      00041B F8 43            [12]  947 	ldhl	sp,	#67
-      00041D 32               [ 8]  948 	ld	(hl-), a
-      00041E 2A               [ 8]  949 	ld	a, (hl+)
-      00041F 5F               [ 4]  950 	ld	e, a
-      000420 56               [ 8]  951 	ld	d, (hl)
-      000421 F8 49            [12]  952 	ldhl	sp,	#73
-      000423 6E               [ 8]  953 	ld	l, (hl)
-      000424 26 00            [ 8]  954 	ld	h, #0x00
-      000426 19               [ 8]  955 	add	hl, de
-      000427 4D               [ 4]  956 	ld	c, l
-      000428 44               [ 4]  957 	ld	b, h
-      000429 0A               [ 8]  958 	ld	a, (bc)
-      00042A F8 47            [12]  959 	ldhl	sp,	#71
-      00042C 22               [ 8]  960 	ld	(hl+), a
-      00042D 3A               [ 8]  961 	ld	a, (hl-)
-      00042E 96               [ 8]  962 	sub	a, (hl)
-      00042F 20 04            [12]  963 	jr	NZ, 00102$
-      000431                        964 00101$:
-                                    965 ;src/main.c:239: return FALSE;
-      000431 AF               [ 4]  966 	xor	a, a
-      000432 C3rE8r04         [16]  967 	jp	00109$
-      000435                        968 00102$:
-                                    969 ;src/main.c:242: start_color = pState->m_map[xy];
-      000435 F8 47            [12]  970 	ldhl	sp,	#71
-      000437 7E               [ 8]  971 	ld	a, (hl)
-      000438 F8 44            [12]  972 	ldhl	sp,	#68
-      00043A 77               [ 8]  973 	ld	(hl), a
-                                    974 ;src/main.c:245: gbQueuePush(xy, &point_queue);
-      00043B 21 00 00         [12]  975 	ld	hl, #0
-      00043E 39               [ 8]  976 	add	hl, sp
-      00043F 5D               [ 4]  977 	ld	e, l
-      000440 54               [ 4]  978 	ld	d, h
-      000441 F8 49            [12]  979 	ldhl	sp,	#73
-      000443 7E               [ 8]  980 	ld	a, (hl)
-      000444 CDr6Dr00         [24]  981 	call	_gbQueuePush
-                                    982 ;src/main.c:247: do
-      000447                        983 00106$:
-                                    984 ;src/main.c:250: gbQueuePop(&current_point, &point_queue);
-      000447 21 00 00         [12]  985 	ld	hl, #0
-      00044A 39               [ 8]  986 	add	hl, sp
-      00044B 4D               [ 4]  987 	ld	c, l
-      00044C 44               [ 4]  988 	ld	b, h
-      00044D F8 41            [12]  989 	ldhl	sp,	#65
-      00044F 5D               [ 4]  990 	ld	e, l
-      000450 54               [ 4]  991 	ld	d, h
-      000451 CDr84r00         [24]  992 	call	_gbQueuePop
-                                    993 ;src/main.c:251: current_color = pState->m_map[current_point];
-      000454 F8 41            [12]  994 	ldhl	sp,	#65
-      000456 2A               [ 8]  995 	ld	a, (hl+)
-      000457 5F               [ 4]  996 	ld	e, a
-      000458 16 00            [ 8]  997 	ld	d, #0x00
-      00045A 2A               [ 8]  998 	ld	a,	(hl+)
-      00045B 66               [ 8]  999 	ld	h, (hl)
-      00045C 6F               [ 4] 1000 	ld	l, a
-      00045D 19               [ 8] 1001 	add	hl, de
-      00045E E5               [16] 1002 	push	hl
-      00045F 7D               [ 4] 1003 	ld	a, l
-      000460 F8 47            [12] 1004 	ldhl	sp,	#71
-      000462 77               [ 8] 1005 	ld	(hl), a
-      000463 E1               [12] 1006 	pop	hl
-      000464 7C               [ 4] 1007 	ld	a, h
-      000465 F8 46            [12] 1008 	ldhl	sp,	#70
-      000467 32               [ 8] 1009 	ld	(hl-), a
-      000468 2A               [ 8] 1010 	ld	a, (hl+)
-      000469 5F               [ 4] 1011 	ld	e, a
-      00046A 2A               [ 8] 1012 	ld	a, (hl+)
-      00046B 57               [ 4] 1013 	ld	d, a
-      00046C 1A               [ 8] 1014 	ld	a, (de)
-      00046D 77               [ 8] 1015 	ld	(hl), a
-                                   1016 ;src/main.c:253: if (start_color != current_color)
-      00046E F8 44            [12] 1017 	ldhl	sp,	#68
-      000470 7E               [ 8] 1018 	ld	a, (hl)
-      000471 F8 47            [12] 1019 	ldhl	sp,	#71
-      000473 96               [ 8] 1020 	sub	a, (hl)
-      000474 20 69            [12] 1021 	jr	NZ, 00107$
-                                   1022 ;src/main.c:257: pState->m_map[current_point] = color;
-      000476 F8 45            [12] 1023 	ldhl	sp,#69
-      000478 2A               [ 8] 1024 	ld	a, (hl+)
-      000479 5F               [ 4] 1025 	ld	e, a
-      00047A 2A               [ 8] 1026 	ld	a, (hl+)
-      00047B 23               [ 8] 1027 	inc	hl
-      00047C 57               [ 4] 1028 	ld	d, a
-      00047D 7E               [ 8] 1029 	ld	a, (hl)
-      00047E 12               [ 8] 1030 	ld	(de), a
-                                   1031 ;src/main.c:260: gbMapSampleNeighbor(current_point, GB_UP,      current_color, pState, &point_queue);
-      00047F 21 00 00         [12] 1032 	ld	hl, #0
-      000482 39               [ 8] 1033 	add	hl, sp
-      000483 E5               [16] 1034 	push	hl
-      000484 F8 44            [12] 1035 	ldhl	sp,	#68
-      000486 2A               [ 8] 1036 	ld	a, (hl+)
-      000487 5F               [ 4] 1037 	ld	e, a
-      000488 56               [ 8] 1038 	ld	d, (hl)
-      000489 D5               [16] 1039 	push	de
-      00048A F8 4B            [12] 1040 	ldhl	sp,	#75
-      00048C 7E               [ 8] 1041 	ld	a, (hl)
-      00048D F5               [16] 1042 	push	af
-      00048E 33               [ 8] 1043 	inc	sp
-      00048F 1E 00            [ 8] 1044 	ld	e, #0x00
-      000491 F8 46            [12] 1045 	ldhl	sp,	#70
-      000493 7E               [ 8] 1046 	ld	a, (hl)
-      000494 CDr05r03         [24] 1047 	call	_gbMapSampleNeighbor
-                                   1048 ;src/main.c:261: gbMapSampleNeighbor(current_point, GB_DOWN,    current_color, pState, &point_queue);
-      000497 21 00 00         [12] 1049 	ld	hl, #0
-      00049A 39               [ 8] 1050 	add	hl, sp
-      00049B E5               [16] 1051 	push	hl
-      00049C F8 44            [12] 1052 	ldhl	sp,	#68
-      00049E 2A               [ 8] 1053 	ld	a, (hl+)
-      00049F 5F               [ 4] 1054 	ld	e, a
-      0004A0 56               [ 8] 1055 	ld	d, (hl)
-      0004A1 D5               [16] 1056 	push	de
-      0004A2 F8 4B            [12] 1057 	ldhl	sp,	#75
-      0004A4 7E               [ 8] 1058 	ld	a, (hl)
-      0004A5 F5               [16] 1059 	push	af
-      0004A6 33               [ 8] 1060 	inc	sp
-      0004A7 1E 01            [ 8] 1061 	ld	e, #0x01
-      0004A9 F8 46            [12] 1062 	ldhl	sp,	#70
-      0004AB 7E               [ 8] 1063 	ld	a, (hl)
-      0004AC CDr05r03         [24] 1064 	call	_gbMapSampleNeighbor
-                                   1065 ;src/main.c:262: gbMapSampleNeighbor(current_point, GB_LEFT,    current_color, pState, &point_queue);
-      0004AF 21 00 00         [12] 1066 	ld	hl, #0
-      0004B2 39               [ 8] 1067 	add	hl, sp
-      0004B3 E5               [16] 1068 	push	hl
-      0004B4 F8 44            [12] 1069 	ldhl	sp,	#68
-      0004B6 2A               [ 8] 1070 	ld	a, (hl+)
-      0004B7 5F               [ 4] 1071 	ld	e, a
-      0004B8 56               [ 8] 1072 	ld	d, (hl)
-      0004B9 D5               [16] 1073 	push	de
-      0004BA F8 4B            [12] 1074 	ldhl	sp,	#75
-      0004BC 7E               [ 8] 1075 	ld	a, (hl)
-      0004BD F5               [16] 1076 	push	af
-      0004BE 33               [ 8] 1077 	inc	sp
-      0004BF 1E 02            [ 8] 1078 	ld	e, #0x02
-      0004C1 F8 46            [12] 1079 	ldhl	sp,	#70
-      0004C3 7E               [ 8] 1080 	ld	a, (hl)
-      0004C4 CDr05r03         [24] 1081 	call	_gbMapSampleNeighbor
-                                   1082 ;src/main.c:263: gbMapSampleNeighbor(current_point, GB_RIGHT,   current_color, pState, &point_queue);
-      0004C7 21 00 00         [12] 1083 	ld	hl, #0
-      0004CA 39               [ 8] 1084 	add	hl, sp
-      0004CB E5               [16] 1085 	push	hl
-      0004CC F8 44            [12] 1086 	ldhl	sp,	#68
-      0004CE 2A               [ 8] 1087 	ld	a, (hl+)
-      0004CF 5F               [ 4] 1088 	ld	e, a
-      0004D0 56               [ 8] 1089 	ld	d, (hl)
-      0004D1 D5               [16] 1090 	push	de
-      0004D2 F8 4B            [12] 1091 	ldhl	sp,	#75
-      0004D4 7E               [ 8] 1092 	ld	a, (hl)
-      0004D5 F5               [16] 1093 	push	af
-      0004D6 33               [ 8] 1094 	inc	sp
-      0004D7 1E 03            [ 8] 1095 	ld	e, #0x03
-      0004D9 F8 46            [12] 1096 	ldhl	sp,	#70
-      0004DB 7E               [ 8] 1097 	ld	a, (hl)
-      0004DC CDr05r03         [24] 1098 	call	_gbMapSampleNeighbor
-      0004DF                       1099 00107$:
-                                   1100 ;src/main.c:265: while (point_queue.m_size != 0);
-      0004DF F8 40            [12] 1101 	ldhl	sp,	#64
-      0004E1 7E               [ 8] 1102 	ld	a, (hl)
-      0004E2 B7               [ 4] 1103 	or	a, a
-      0004E3 C2r47r04         [16] 1104 	jp	NZ, 00106$
-                                   1105 ;src/main.c:267: return TRUE;
-      0004E6 3E 01            [ 8] 1106 	ld	a, #0x01
-      0004E8                       1107 00109$:
-                                   1108 ;src/main.c:268: }
-      0004E8 E8 4A            [16] 1109 	add	sp, #74
-      0004EA E1               [12] 1110 	pop	hl
-      0004EB C1               [12] 1111 	pop	bc
-      0004EC E9               [ 4] 1112 	jp	(hl)
-                                   1113 ;src/main.c:270: void main()
-                                   1114 ;	---------------------------------
-                                   1115 ; Function main
-                                   1116 ; ---------------------------------
-      0004ED                       1117 _main::
-      0004ED E8 C0            [16] 1118 	add	sp, #-64
-                                   1119 ;src/main.c:272: DISPLAY_ON;
-      0004EF F0r00            [12] 1120 	ldh	a, (_LCDC_REG + 0)
-      0004F1 F6 80            [ 8] 1121 	or	a, #0x80
-      0004F3 E0r00            [12] 1122 	ldh	(_LCDC_REG + 0), a
-                                   1123 ;src/main.c:277: start_time  = time(NULL);
-      0004F5 11 00 00         [12] 1124 	ld	de, #0x0000
-      0004F8 CDr00r00         [24] 1125 	call	_time
-                                   1126 ;src/main.c:281: initrand(start_time);
-      0004FB 06 00            [ 8] 1127 	ld	b, #0x00
-      0004FD C5               [16] 1128 	push	bc
-      0004FE CDr00r00         [24] 1129 	call	_initrand
-      000501 E1               [12] 1130 	pop	hl
-                                   1131 ;src/main.c:283: gbInitMap(&state);
-      000502 F8 00            [12] 1132 	ldhl	sp,	#0
-      000504 4D               [ 4] 1133 	ld	c, l
-      000505 44               [ 4] 1134 	ld	b, h
-      000506 59               [ 4] 1135 	ld	e, c
-      000507 50               [ 4] 1136 	ld	d, b
-      000508 C5               [16] 1137 	push	bc
-      000509 CDr9Cr00         [24] 1138 	call	_gbInitMap
-      00050C C1               [12] 1139 	pop	bc
-                                   1140 ;src/main.c:285: gbPrintMap(&state);
-      00050D 59               [ 4] 1141 	ld	e, c
-      00050E 50               [ 4] 1142 	ld	d, b
-      00050F C5               [16] 1143 	push	bc
-      000510 CDr33r01         [24] 1144 	call	_gbPrintMap
-                                   1145 ;src/main.c:287: gbFindChanceOfLostPkg(&state);
-      000513 D1               [12] 1146 	pop	de
-      000514 CDrB6r01         [24] 1147 	call	_gbFindChanceOfLostPkg
-                                   1148 ;src/main.c:289: while(1)
-      000517                       1149 00102$:
-                                   1150 ;src/main.c:291: input = joypad();
-      000517 CDr00r00         [24] 1151 	call	_joypad
-      00051A 18 FB            [12] 1152 	jr	00102$
-                                   1153 ;src/main.c:301: }
-      00051C E8 40            [16] 1154 	add	sp, #64
-      00051E C9               [16] 1155 	ret
-                                   1156 	.area _CODE
-                                   1157 	.area _INITIALIZER
-                                   1158 	.area _CABS (ABS)
+                                     41 	.area _HOME
+                                     42 	.area _HOME
+                                     43 ;--------------------------------------------------------
+                                     44 ; code
+                                     45 ;--------------------------------------------------------
+                                     46 	.area _CODE
+                                     47 ;src/utils.h:8: static void copy_U8_array(uint8_t *dest, const uint8_t* source, uint8_t size)
+                                     48 ;	---------------------------------
+                                     49 ; Function copy_U8_array
+                                     50 ; ---------------------------------
+      000000                         51 _copy_U8_array:
+      000000 E8 FB            [16]   52 	add	sp, #-5
+      000002 F8 02            [12]   53 	ldhl	sp,	#2
+      000004 7B               [ 4]   54 	ld	a, e
+      000005 22               [ 8]   55 	ld	(hl+), a
+      000006 72               [ 8]   56 	ld	(hl), d
+      000007 33               [ 8]   57 	inc	sp
+      000008 33               [ 8]   58 	inc	sp
+      000009 C5               [16]   59 	push	bc
+                                     60 ;src/utils.h:10: while (size != 0)
+      00000A F8 07            [12]   61 	ldhl	sp,	#7
+      00000C 7E               [ 8]   62 	ld	a, (hl)
+      00000D F8 04            [12]   63 	ldhl	sp,	#4
+      00000F 77               [ 8]   64 	ld	(hl), a
+      000010                         65 00101$:
+      000010 F8 04            [12]   66 	ldhl	sp,	#4
+      000012 7E               [ 8]   67 	ld	a, (hl)
+      000013 B7               [ 4]   68 	or	a, a
+      000014 28 17            [12]   69 	jr	Z, 00104$
+                                     70 ;src/utils.h:12: dest[size-1] = source[size-1];
+      000016 3A               [ 8]   71 	ld	a, (hl-)
+      000017 4F               [ 4]   72 	ld	c, a
+      000018 06 00            [ 8]   73 	ld	b, #0x00
+      00001A 0B               [ 8]   74 	dec	bc
+      00001B 3A               [ 8]   75 	ld	a, (hl-)
+      00001C 6E               [ 8]   76 	ld	l, (hl)
+      00001D 67               [ 4]   77 	ld	h, a
+      00001E 09               [ 8]   78 	add	hl, bc
+      00001F 5D               [ 4]   79 	ld	e, l
+      000020 54               [ 4]   80 	ld	d, h
+      000021 E1               [12]   81 	pop	hl
+      000022 E5               [16]   82 	push	hl
+      000023 09               [ 8]   83 	add	hl, bc
+      000024 4D               [ 4]   84 	ld	c, l
+      000025 44               [ 4]   85 	ld	b, h
+      000026 0A               [ 8]   86 	ld	a, (bc)
+      000027 12               [ 8]   87 	ld	(de), a
+                                     88 ;src/utils.h:13: --size;
+      000028 F8 04            [12]   89 	ldhl	sp,	#4
+      00002A 35               [12]   90 	dec	(hl)
+      00002B 18 E3            [12]   91 	jr	00101$
+      00002D                         92 00104$:
+                                     93 ;src/utils.h:15: }
+      00002D E8 05            [16]   94 	add	sp, #5
+      00002F E1               [12]   95 	pop	hl
+      000030 33               [ 8]   96 	inc	sp
+      000031 E9               [ 4]   97 	jp	(hl)
+                                     98 ;src/utils.h:17: static void* memcpy(void *dest, const void *source, uint16_t size)
+                                     99 ;	---------------------------------
+                                    100 ; Function memcpy
+                                    101 ; ---------------------------------
+      000032                        102 _memcpy:
+      000032 E8 F8            [16]  103 	add	sp, #-8
+      000034 F8 06            [12]  104 	ldhl	sp,	#6
+      000036 7B               [ 4]  105 	ld	a, e
+      000037 22               [ 8]  106 	ld	(hl+), a
+                                    107 ;src/utils.h:19: uint8_t*        dest_u8 = dest;
+      000038 7A               [ 4]  108 	ld	a, d
+      000039 32               [ 8]  109 	ld	(hl-), a
+      00003A 7E               [ 8]  110 	ld	a, (hl)
+      00003B F8 00            [12]  111 	ldhl	sp,	#0
+      00003D 77               [ 8]  112 	ld	(hl), a
+      00003E F8 07            [12]  113 	ldhl	sp,	#7
+      000040 7E               [ 8]  114 	ld	a, (hl)
+      000041 F8 01            [12]  115 	ldhl	sp,	#1
+                                    116 ;src/utils.h:20: const uint8_t*  src_u8  = source;
+      000043 22               [ 8]  117 	ld	(hl+), a
+      000044 79               [ 4]  118 	ld	a, c
+      000045 22               [ 8]  119 	ld	(hl+), a
+      000046 70               [ 8]  120 	ld	(hl), b
+                                    121 ;src/utils.h:22: while (size)
+      000047 F8 0A            [12]  122 	ldhl	sp,	#10
+      000049 2A               [ 8]  123 	ld	a, (hl+)
+      00004A 4F               [ 4]  124 	ld	c, a
+      00004B 46               [ 8]  125 	ld	b, (hl)
+      00004C                        126 00101$:
+      00004C 78               [ 4]  127 	ld	a, b
+      00004D B1               [ 4]  128 	or	a, c
+      00004E 28 29            [12]  129 	jr	Z, 00103$
+                                    130 ;src/utils.h:24: dest_u8[size-1] = src_u8[size-1];
+      000050 59               [ 4]  131 	ld	e, c
+      000051 50               [ 4]  132 	ld	d, b
+      000052 1B               [ 8]  133 	dec	de
+      000053 D5               [16]  134 	push	de
+      000054 F8 02            [12]  135 	ldhl	sp,	#2
+      000056 2A               [ 8]  136 	ld	a,	(hl+)
+      000057 66               [ 8]  137 	ld	h, (hl)
+      000058 6F               [ 4]  138 	ld	l, a
+      000059 19               [ 8]  139 	add	hl, de
+      00005A D1               [12]  140 	pop	de
+      00005B E5               [16]  141 	push	hl
+      00005C 7D               [ 4]  142 	ld	a, l
+      00005D F8 06            [12]  143 	ldhl	sp,	#6
+      00005F 77               [ 8]  144 	ld	(hl), a
+      000060 E1               [12]  145 	pop	hl
+      000061 7C               [ 4]  146 	ld	a, h
+      000062 F8 05            [12]  147 	ldhl	sp,	#5
+      000064 77               [ 8]  148 	ld	(hl), a
+      000065 F8 02            [12]  149 	ldhl	sp,	#2
+      000067 2A               [ 8]  150 	ld	a,	(hl+)
+      000068 66               [ 8]  151 	ld	h, (hl)
+      000069 6F               [ 4]  152 	ld	l, a
+      00006A 19               [ 8]  153 	add	hl, de
+      00006B 5D               [ 4]  154 	ld	e, l
+      00006C 54               [ 4]  155 	ld	d, h
+      00006D 1A               [ 8]  156 	ld	a, (de)
+      00006E F8 04            [12]  157 	ldhl	sp,	#4
+      000070 F5               [16]  158 	push	af
+      000071 2A               [ 8]  159 	ld	a,	(hl+)
+      000072 66               [ 8]  160 	ld	h, (hl)
+      000073 6F               [ 4]  161 	ld	l, a
+      000074 F1               [12]  162 	pop	af
+      000075 77               [ 8]  163 	ld	(hl), a
+                                    164 ;src/utils.h:25: --size;
+      000076 0B               [ 8]  165 	dec	bc
+      000077 18 D3            [12]  166 	jr	00101$
+      000079                        167 00103$:
+                                    168 ;src/utils.h:28: return dest;
+      000079 F8 06            [12]  169 	ldhl	sp,	#6
+      00007B 2A               [ 8]  170 	ld	a, (hl+)
+      00007C 4F               [ 4]  171 	ld	c, a
+      00007D 46               [ 8]  172 	ld	b, (hl)
+                                    173 ;src/utils.h:29: }
+      00007E E8 08            [16]  174 	add	sp, #8
+      000080 E1               [12]  175 	pop	hl
+      000081 F1               [12]  176 	pop	af
+      000082 E9               [ 4]  177 	jp	(hl)
+                                    178 ;src/main.c:11: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
+                                    179 ;	---------------------------------
+                                    180 ; Function gbCountdownSeconds
+                                    181 ; ---------------------------------
+      000083                        182 _gbCountdownSeconds::
+      000083 6F               [ 4]  183 	ld	l, a
+                                    184 ;	spillPairReg hl
+                                    185 ;	spillPairReg hl
+                                    186 ;src/main.c:13: return max_time - ((time(NULL)-start_time) % (max_time+1));
+      000084 E5               [16]  187 	push	hl
+      000085 D5               [16]  188 	push	de
+      000086 11 00 00         [12]  189 	ld	de, #0x0000
+      000089 CDr00r00         [24]  190 	call	_time
+      00008C D1               [12]  191 	pop	de
+      00008D E1               [12]  192 	pop	hl
+      00008E 79               [ 4]  193 	ld	a, c
+      00008F 16 00            [ 8]  194 	ld	d, #0x00
+      000091 93               [ 4]  195 	sub	a, e
+      000092 5F               [ 4]  196 	ld	e, a
+      000093 78               [ 4]  197 	ld	a, b
+      000094 9A               [ 4]  198 	sbc	a, d
+      000095 57               [ 4]  199 	ld	d, a
+      000096 4D               [ 4]  200 	ld	c, l
+      000097 06 00            [ 8]  201 	ld	b, #0x00
+      000099 03               [ 8]  202 	inc	bc
+      00009A E5               [16]  203 	push	hl
+      00009B CDr00r00         [24]  204 	call	__moduint
+      00009E E1               [12]  205 	pop	hl
+      00009F 7D               [ 4]  206 	ld	a, l
+      0000A0 91               [ 4]  207 	sub	a, c
+                                    208 ;src/main.c:14: }
+      0000A1 C9               [16]  209 	ret
+                                    210 ;src/main.c:16: void main()
+                                    211 ;	---------------------------------
+                                    212 ; Function main
+                                    213 ; ---------------------------------
+      0000A2                        214 _main::
+                                    215 ;src/main.c:18: scene1Start();
+      0000A2 CDr00r00         [24]  216 	call	_scene1Start
+                                    217 ;src/main.c:19: scene1Update();
+                                    218 ;src/main.c:20: }
+      0000A5 C3r00r00         [16]  219 	jp	_scene1Update
+                                    220 	.area _CODE
+                                    221 	.area _INITIALIZER
+                                    222 	.area _CABS (ABS)

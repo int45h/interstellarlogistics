@@ -1,0 +1,72 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (GameBoy)                  Page 1
+Hexadecimal [24-Bits]
+
+Symbol Table
+
+    .__.$$$.                                                    =  002710 L
+    .__.ABS.                                                    =  000000 G
+    .__.CPU.                                                    =  000000 L
+    .__.H$L.                                                    =  000000 L
+    _BGP_REG                                                       ****** GX
+    _LCDC_REG                                                      ****** GX
+  0 ___str_0                                                       0001A9 R
+  0 ___str_1                                                       000281 R
+  0 ___str_2                                                       0003BF R
+  0 ___str_3                                                       0003D3 R
+    __divsint                                                      ****** GX
+    __modsint                                                      ****** GX
+  7 __xinit__countdown                                             000001 R
+  7 __xinit__input                                                 000000 R
+  7 __xinit__max_time                                              000003 R
+  7 __xinit__rng_val                                               000002 R
+  7 __xinit__start_time                                            000004 R
+  0 _copy_U8_array                                                 000000 R
+  2 _countdown                                                     000001 GR
+    _delay                                                         ****** GX
+  0 _gbFindChanceOfLostPkg                                         0001AD GR
+  0 _gbFloodFill                                                   0003F3 GR
+  0 _gbInitMap                                                     0000B2 GR
+  0 _gbMapSampleNeighbor                                           0002FC GR
+  0 _gbPointInBounds                                               000297 GR
+  0 _gbPrintMap                                                    000149 GR
+  0 _gbQueuePop                                                    00009A GR
+  0 _gbQueuePush                                                   000083 GR
+  0 _gbSampleDirection                                             0002AD GR
+    _initrand                                                      ****** GX
+  2 _input                                                         000000 GR
+    _joypad                                                        ****** GX
+  2 _max_time                                                      000003 GR
+  0 _memcpy                                                        000032 R
+  0 _pkgLossFactor                                                 00027C GR
+    _printf                                                        ****** GX
+    _putchar                                                       ****** GX
+    _rand                                                          ****** GX
+  2 _rng_val                                                       000002 GR
+  0 _scene1Start                                                   0004E4 GR
+  0 _scene1Update                                                  00055D GR
+    _scene1_2_tilemap                                              ****** GX
+    _scene1_2_tileset                                              ****** GX
+    _set_bkg_data                                                  ****** GX
+    _set_bkg_tile_xy                                               ****** GX
+    _set_bkg_tiles                                                 ****** GX
+  2 _start_time                                                    000004 GR
+  1 _state                                                         000000 GR
+    _time                                                          ****** GX
+    _wait_vbl_done                                                 ****** GX
+
+
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (GameBoy)                  Page 2
+Hexadecimal [24-Bits]
+
+Area Table
+
+   0 _CODE                                      size    568   flags    0
+   1 _DATA                                      size     40   flags    0
+   2 _INITIALIZED                               size      5   flags    0
+   3 _DABS                                      size      0   flags    8
+   4 _HOME                                      size      0   flags    0
+   5 _GSINIT                                    size      0   flags    0
+   6 _GSFINAL                                   size      0   flags    0
+   7 _INITIALIZER                               size      5   flags    0
+   8 _CABS                                      size      0   flags    8
+
