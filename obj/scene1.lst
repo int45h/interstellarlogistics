@@ -8,1246 +8,1480 @@
                                       8 ;--------------------------------------------------------
                                       9 ; Public variables in this module
                                      10 ;--------------------------------------------------------
-                                     11 	.globl _gbFloodFill
-                                     12 	.globl _gbMapSampleNeighbor
-                                     13 	.globl _gbSampleDirection
-                                     14 	.globl _gbPointInBounds
-                                     15 	.globl _gbFindChanceOfLostPkg
-                                     16 	.globl _gbPrintMap
-                                     17 	.globl _gbInitMap
-                                     18 	.globl _gbQueuePop
-                                     19 	.globl _gbQueuePush
-                                     20 	.globl _printf
-                                     21 	.globl _putchar
-                                     22 	.globl _set_bkg_tile_xy
-                                     23 	.globl _set_bkg_tiles
-                                     24 	.globl _set_bkg_data
-                                     25 	.globl _wait_vbl_done
-                                     26 	.globl _joypad
-                                     27 	.globl _delay
-                                     28 	.globl _time
-                                     29 	.globl _rand
-                                     30 	.globl _initrand
-                                     31 	.globl _start_time
-                                     32 	.globl _max_time
-                                     33 	.globl _rng_val
-                                     34 	.globl _countdown
-                                     35 	.globl _input
-                                     36 	.globl _state
-                                     37 	.globl _pkgLossFactor
-                                     38 	.globl _scene1Start
-                                     39 	.globl _scene1Update
-                                     40 ;--------------------------------------------------------
-                                     41 ; special function registers
-                                     42 ;--------------------------------------------------------
-                                     43 ;--------------------------------------------------------
-                                     44 ; ram data
-                                     45 ;--------------------------------------------------------
-                                     46 	.area _DATA
-      000000                         47 _state::
-      000000                         48 	.ds 64
-                                     49 ;--------------------------------------------------------
-                                     50 ; ram data
-                                     51 ;--------------------------------------------------------
-                                     52 	.area _INITIALIZED
-      000000                         53 _input::
-      000000                         54 	.ds 1
-      000001                         55 _countdown::
-      000001                         56 	.ds 1
-      000002                         57 _rng_val::
-      000002                         58 	.ds 1
-      000003                         59 _max_time::
-      000003                         60 	.ds 1
-      000004                         61 _start_time::
-      000004                         62 	.ds 1
-                                     63 ;--------------------------------------------------------
-                                     64 ; absolute external ram data
-                                     65 ;--------------------------------------------------------
-                                     66 	.area _DABS (ABS)
-                                     67 ;--------------------------------------------------------
-                                     68 ; global & static initialisations
-                                     69 ;--------------------------------------------------------
-                                     70 	.area _HOME
-                                     71 	.area _GSINIT
-                                     72 	.area _GSFINAL
-                                     73 	.area _GSINIT
-                                     74 ;--------------------------------------------------------
-                                     75 ; Home
-                                     76 ;--------------------------------------------------------
-                                     77 	.area _HOME
-                                     78 	.area _HOME
+                                     11 	.globl _scene1End
+                                     12 	.globl _scene1UpdateCursor
+                                     13 	.globl _scene1UpdatePlayerActions
+                                     14 	.globl _scene1UpdateCountdown
+                                     15 	.globl _scene1InitCounter
+                                     16 	.globl _scene1InitBG
+                                     17 	.globl _scene1InitMap
+                                     18 	.globl _scene1PrintMap
+                                     19 	.globl _gbFloodFill
+                                     20 	.globl _gbMapSampleNeighbor
+                                     21 	.globl _gbSampleDirection
+                                     22 	.globl _gbPointInBounds
+                                     23 	.globl _gbFindChanceOfLostPkg
+                                     24 	.globl _gbQueuePop
+                                     25 	.globl _gbQueuePush
+                                     26 	.globl _gbFadeOut
+                                     27 	.globl _gbFadeIn
+                                     28 	.globl _gbCountdownSeconds
+                                     29 	.globl _printf
+                                     30 	.globl _putchar
+                                     31 	.globl _set_bkg_tile_xy
+                                     32 	.globl _set_bkg_tiles
+                                     33 	.globl _set_bkg_data
+                                     34 	.globl _wait_vbl_done
+                                     35 	.globl _joypad
+                                     36 	.globl _delay
+                                     37 	.globl _time
+                                     38 	.globl _rand
+                                     39 	.globl _initrand
+                                     40 	.globl _start_time
+                                     41 	.globl _max_time
+                                     42 	.globl _rng_val
+                                     43 	.globl _countdown
+                                     44 	.globl _input
+                                     45 	.globl _state
+                                     46 	.globl _pkgLossFactor
+                                     47 	.globl _number_start_index
+                                     48 	.globl _scene1Start
+                                     49 	.globl _scene1Update
+                                     50 ;--------------------------------------------------------
+                                     51 ; special function registers
+                                     52 ;--------------------------------------------------------
+                                     53 ;--------------------------------------------------------
+                                     54 ; ram data
+                                     55 ;--------------------------------------------------------
+                                     56 	.area _DATA
+      000000                         57 _state::
+      000000                         58 	.ds 64
+                                     59 ;--------------------------------------------------------
+                                     60 ; ram data
+                                     61 ;--------------------------------------------------------
+                                     62 	.area _INITIALIZED
+      000000                         63 _input::
+      000000                         64 	.ds 1
+      000001                         65 _countdown::
+      000001                         66 	.ds 1
+      000002                         67 _rng_val::
+      000002                         68 	.ds 1
+      000003                         69 _max_time::
+      000003                         70 	.ds 1
+      000004                         71 _start_time::
+      000004                         72 	.ds 1
+                                     73 ;--------------------------------------------------------
+                                     74 ; absolute external ram data
+                                     75 ;--------------------------------------------------------
+                                     76 	.area _DABS (ABS)
+                                     77 ;--------------------------------------------------------
+                                     78 ; global & static initialisations
                                      79 ;--------------------------------------------------------
-                                     80 ; code
-                                     81 ;--------------------------------------------------------
-                                     82 	.area _CODE
-                                     83 ;src/utils.h:8: static void copy_U8_array(uint8_t *dest, const uint8_t* source, uint8_t size)
-                                     84 ;	---------------------------------
-                                     85 ; Function copy_U8_array
-                                     86 ; ---------------------------------
-      000000                         87 _copy_U8_array:
-      000000 E8 FB            [16]   88 	add	sp, #-5
-      000002 F8 02            [12]   89 	ldhl	sp,	#2
-      000004 7B               [ 4]   90 	ld	a, e
-      000005 22               [ 8]   91 	ld	(hl+), a
-      000006 72               [ 8]   92 	ld	(hl), d
-      000007 33               [ 8]   93 	inc	sp
-      000008 33               [ 8]   94 	inc	sp
-      000009 C5               [16]   95 	push	bc
-                                     96 ;src/utils.h:10: while (size != 0)
-      00000A F8 07            [12]   97 	ldhl	sp,	#7
-      00000C 7E               [ 8]   98 	ld	a, (hl)
-      00000D F8 04            [12]   99 	ldhl	sp,	#4
-      00000F 77               [ 8]  100 	ld	(hl), a
-      000010                        101 00101$:
-      000010 F8 04            [12]  102 	ldhl	sp,	#4
-      000012 7E               [ 8]  103 	ld	a, (hl)
-      000013 B7               [ 4]  104 	or	a, a
-      000014 28 17            [12]  105 	jr	Z, 00104$
-                                    106 ;src/utils.h:12: dest[size-1] = source[size-1];
-      000016 3A               [ 8]  107 	ld	a, (hl-)
-      000017 4F               [ 4]  108 	ld	c, a
-      000018 06 00            [ 8]  109 	ld	b, #0x00
-      00001A 0B               [ 8]  110 	dec	bc
-      00001B 3A               [ 8]  111 	ld	a, (hl-)
-      00001C 6E               [ 8]  112 	ld	l, (hl)
-      00001D 67               [ 4]  113 	ld	h, a
-      00001E 09               [ 8]  114 	add	hl, bc
-      00001F 5D               [ 4]  115 	ld	e, l
-      000020 54               [ 4]  116 	ld	d, h
-      000021 E1               [12]  117 	pop	hl
-      000022 E5               [16]  118 	push	hl
-      000023 09               [ 8]  119 	add	hl, bc
-      000024 4D               [ 4]  120 	ld	c, l
-      000025 44               [ 4]  121 	ld	b, h
-      000026 0A               [ 8]  122 	ld	a, (bc)
-      000027 12               [ 8]  123 	ld	(de), a
-                                    124 ;src/utils.h:13: --size;
-      000028 F8 04            [12]  125 	ldhl	sp,	#4
-      00002A 35               [12]  126 	dec	(hl)
-      00002B 18 E3            [12]  127 	jr	00101$
-      00002D                        128 00104$:
-                                    129 ;src/utils.h:15: }
-      00002D E8 05            [16]  130 	add	sp, #5
-      00002F E1               [12]  131 	pop	hl
-      000030 33               [ 8]  132 	inc	sp
-      000031 E9               [ 4]  133 	jp	(hl)
-                                    134 ;src/utils.h:17: static void* memcpy(void *dest, const void *source, uint16_t size)
-                                    135 ;	---------------------------------
-                                    136 ; Function memcpy
-                                    137 ; ---------------------------------
-      000032                        138 _memcpy:
-      000032 E8 F8            [16]  139 	add	sp, #-8
-      000034 F8 06            [12]  140 	ldhl	sp,	#6
-      000036 7B               [ 4]  141 	ld	a, e
-      000037 22               [ 8]  142 	ld	(hl+), a
-                                    143 ;src/utils.h:19: uint8_t*        dest_u8 = dest;
-      000038 7A               [ 4]  144 	ld	a, d
-      000039 32               [ 8]  145 	ld	(hl-), a
-      00003A 7E               [ 8]  146 	ld	a, (hl)
-      00003B F8 00            [12]  147 	ldhl	sp,	#0
-      00003D 77               [ 8]  148 	ld	(hl), a
-      00003E F8 07            [12]  149 	ldhl	sp,	#7
-      000040 7E               [ 8]  150 	ld	a, (hl)
-      000041 F8 01            [12]  151 	ldhl	sp,	#1
-                                    152 ;src/utils.h:20: const uint8_t*  src_u8  = source;
-      000043 22               [ 8]  153 	ld	(hl+), a
-      000044 79               [ 4]  154 	ld	a, c
-      000045 22               [ 8]  155 	ld	(hl+), a
-      000046 70               [ 8]  156 	ld	(hl), b
-                                    157 ;src/utils.h:22: while (size)
-      000047 F8 0A            [12]  158 	ldhl	sp,	#10
-      000049 2A               [ 8]  159 	ld	a, (hl+)
-      00004A 4F               [ 4]  160 	ld	c, a
-      00004B 46               [ 8]  161 	ld	b, (hl)
-      00004C                        162 00101$:
-      00004C 78               [ 4]  163 	ld	a, b
-      00004D B1               [ 4]  164 	or	a, c
-      00004E 28 29            [12]  165 	jr	Z, 00103$
-                                    166 ;src/utils.h:24: dest_u8[size-1] = src_u8[size-1];
-      000050 59               [ 4]  167 	ld	e, c
-      000051 50               [ 4]  168 	ld	d, b
-      000052 1B               [ 8]  169 	dec	de
-      000053 D5               [16]  170 	push	de
-      000054 F8 02            [12]  171 	ldhl	sp,	#2
-      000056 2A               [ 8]  172 	ld	a,	(hl+)
-      000057 66               [ 8]  173 	ld	h, (hl)
-      000058 6F               [ 4]  174 	ld	l, a
-      000059 19               [ 8]  175 	add	hl, de
-      00005A D1               [12]  176 	pop	de
-      00005B E5               [16]  177 	push	hl
-      00005C 7D               [ 4]  178 	ld	a, l
-      00005D F8 06            [12]  179 	ldhl	sp,	#6
-      00005F 77               [ 8]  180 	ld	(hl), a
-      000060 E1               [12]  181 	pop	hl
-      000061 7C               [ 4]  182 	ld	a, h
-      000062 F8 05            [12]  183 	ldhl	sp,	#5
-      000064 77               [ 8]  184 	ld	(hl), a
-      000065 F8 02            [12]  185 	ldhl	sp,	#2
-      000067 2A               [ 8]  186 	ld	a,	(hl+)
-      000068 66               [ 8]  187 	ld	h, (hl)
-      000069 6F               [ 4]  188 	ld	l, a
-      00006A 19               [ 8]  189 	add	hl, de
-      00006B 5D               [ 4]  190 	ld	e, l
-      00006C 54               [ 4]  191 	ld	d, h
-      00006D 1A               [ 8]  192 	ld	a, (de)
-      00006E F8 04            [12]  193 	ldhl	sp,	#4
-      000070 F5               [16]  194 	push	af
-      000071 2A               [ 8]  195 	ld	a,	(hl+)
-      000072 66               [ 8]  196 	ld	h, (hl)
-      000073 6F               [ 4]  197 	ld	l, a
-      000074 F1               [12]  198 	pop	af
-      000075 77               [ 8]  199 	ld	(hl), a
-                                    200 ;src/utils.h:25: --size;
-      000076 0B               [ 8]  201 	dec	bc
-      000077 18 D3            [12]  202 	jr	00101$
-      000079                        203 00103$:
-                                    204 ;src/utils.h:28: return dest;
-      000079 F8 06            [12]  205 	ldhl	sp,	#6
-      00007B 2A               [ 8]  206 	ld	a, (hl+)
-      00007C 4F               [ 4]  207 	ld	c, a
-      00007D 46               [ 8]  208 	ld	b, (hl)
-                                    209 ;src/utils.h:29: }
-      00007E E8 08            [16]  210 	add	sp, #8
-      000080 E1               [12]  211 	pop	hl
-      000081 F1               [12]  212 	pop	af
-      000082 E9               [ 4]  213 	jp	(hl)
-                                    214 ;src/scene1.c:15: B8 gbQueuePush( P2 xy, 
-                                    215 ;	---------------------------------
-                                    216 ; Function gbQueuePush
-                                    217 ; ---------------------------------
-      000083                        218 _gbQueuePush::
-      000083 4F               [ 4]  219 	ld	c, a
-                                    220 ;src/scene1.c:18: if (pQueue->m_size >= GB_MAX_QUEUE_LENGTH)
-      000084 21 40 00         [12]  221 	ld	hl, #0x0040
-      000087 19               [ 8]  222 	add	hl, de
-      000088 7E               [ 8]  223 	ld	a, (hl)
-      000089 FE 40            [ 8]  224 	cp	a, #0x40
-      00008B 38 02            [12]  225 	jr	C, 00102$
-                                    226 ;src/scene1.c:19: return FALSE;
-      00008D AF               [ 4]  227 	xor	a, a
-      00008E C9               [16]  228 	ret
-      00008F                        229 00102$:
-                                    230 ;src/scene1.c:21: pQueue->m_queue[pQueue->m_size++] = xy;
-      00008F 47               [ 4]  231 	ld	b, a
-      000090 04               [ 4]  232 	inc	b
-      000091 70               [ 8]  233 	ld	(hl), b
-      000092 6F               [ 4]  234 	ld	l, a
-      000093 26 00            [ 8]  235 	ld	h, #0x00
-      000095 19               [ 8]  236 	add	hl, de
-      000096 71               [ 8]  237 	ld	(hl), c
-                                    238 ;src/scene1.c:22: return TRUE;
-      000097 3E 01            [ 8]  239 	ld	a, #0x01
-                                    240 ;src/scene1.c:23: }
-      000099 C9               [16]  241 	ret
-                                    242 ;src/scene1.c:25: B8 gbQueuePop(  P2 *xy, 
-                                    243 ;	---------------------------------
-                                    244 ; Function gbQueuePop
-                                    245 ; ---------------------------------
-      00009A                        246 _gbQueuePop::
-      00009A D5               [16]  247 	push	de
-                                    248 ;src/scene1.c:28: if (pQueue->m_size == 0)
-      00009B 21 40 00         [12]  249 	ld	hl, #0x0040
-      00009E 09               [ 8]  250 	add	hl, bc
-      00009F 7E               [ 8]  251 	ld	a, (hl)
-                                    252 ;src/scene1.c:29: return FALSE;
-      0000A0 B7               [ 4]  253 	or	a,a
-      0000A1 28 0C            [12]  254 	jr	Z, 00103$
-                                    255 ;src/scene1.c:31: *xy = pQueue->m_queue[--pQueue->m_size];
-      0000A3 3D               [ 4]  256 	dec	a
-      0000A4 77               [ 8]  257 	ld	(hl), a
-      0000A5 6F               [ 4]  258 	ld	l, a
-      0000A6 26 00            [ 8]  259 	ld	h, #0x00
-      0000A8 09               [ 8]  260 	add	hl, bc
-      0000A9 4E               [ 8]  261 	ld	c, (hl)
-      0000AA E1               [12]  262 	pop	hl
-      0000AB E5               [16]  263 	push	hl
-      0000AC 71               [ 8]  264 	ld	(hl), c
-                                    265 ;src/scene1.c:32: return TRUE;
-      0000AD 3E 01            [ 8]  266 	ld	a, #0x01
-      0000AF                        267 00103$:
-                                    268 ;src/scene1.c:33: }
-      0000AF 33               [ 8]  269 	inc	sp
-      0000B0 33               [ 8]  270 	inc	sp
-      0000B1 C9               [16]  271 	ret
-                                    272 ;src/scene1.c:55: void gbInitMap(Scene1_State *pState)
-                                    273 ;	---------------------------------
-                                    274 ; Function gbInitMap
-                                    275 ; ---------------------------------
-      0000B2                        276 _gbInitMap::
-      0000B2 E8 C0            [16]  277 	add	sp, #-64
-      0000B4 4B               [ 4]  278 	ld	c, e
-      0000B5 42               [ 4]  279 	ld	b, d
-                                    280 ;src/scene1.c:57: const U8 COCK_RING[] = 
-      0000B6 F8 00            [12]  281 	ldhl	sp,	#0
-      0000B8 3E 01            [ 8]  282 	ld	a,#0x01
-      0000BA 22               [ 8]  283 	ld	(hl+),a
-      0000BB 22               [ 8]  284 	ld	(hl+), a
-      0000BC AF               [ 4]  285 	xor	a, a
-      0000BD 22               [ 8]  286 	ld	(hl+), a
-      0000BE AF               [ 4]  287 	xor	a, a
-      0000BF 22               [ 8]  288 	ld	(hl+), a
-      0000C0 AF               [ 4]  289 	xor	a, a
-      0000C1 22               [ 8]  290 	ld	(hl+), a
-      0000C2 AF               [ 4]  291 	xor	a, a
-      0000C3 22               [ 8]  292 	ld	(hl+), a
-      0000C4 AF               [ 4]  293 	xor	a, a
-      0000C5 22               [ 8]  294 	ld	(hl+), a
-      0000C6 AF               [ 4]  295 	xor	a, a
-      0000C7 22               [ 8]  296 	ld	(hl+), a
-      0000C8 3E 01            [ 8]  297 	ld	a,#0x01
-      0000CA 22               [ 8]  298 	ld	(hl+),a
-      0000CB 22               [ 8]  299 	ld	(hl+), a
-      0000CC 3E 01            [ 8]  300 	ld	a,#0x01
-      0000CE 22               [ 8]  301 	ld	(hl+),a
-      0000CF 22               [ 8]  302 	ld	(hl+), a
-      0000D0 AF               [ 4]  303 	xor	a, a
-      0000D1 22               [ 8]  304 	ld	(hl+), a
-      0000D2 AF               [ 4]  305 	xor	a, a
-      0000D3 22               [ 8]  306 	ld	(hl+), a
-      0000D4 AF               [ 4]  307 	xor	a, a
-      0000D5 22               [ 8]  308 	ld	(hl+), a
-      0000D6 AF               [ 4]  309 	xor	a, a
-      0000D7 22               [ 8]  310 	ld	(hl+), a
-      0000D8 3E 01            [ 8]  311 	ld	a,#0x01
-      0000DA 22               [ 8]  312 	ld	(hl+),a
-      0000DB 22               [ 8]  313 	ld	(hl+), a
-      0000DC 3E 01            [ 8]  314 	ld	a,#0x01
-      0000DE 22               [ 8]  315 	ld	(hl+),a
-      0000DF 22               [ 8]  316 	ld	(hl+), a
-      0000E0 AF               [ 4]  317 	xor	a, a
-      0000E1 22               [ 8]  318 	ld	(hl+), a
-      0000E2 AF               [ 4]  319 	xor	a, a
-      0000E3 22               [ 8]  320 	ld	(hl+), a
-      0000E4 AF               [ 4]  321 	xor	a, a
-      0000E5 22               [ 8]  322 	ld	(hl+), a
-      0000E6 AF               [ 4]  323 	xor	a, a
-      0000E7 22               [ 8]  324 	ld	(hl+), a
-      0000E8 AF               [ 4]  325 	xor	a, a
-      0000E9 22               [ 8]  326 	ld	(hl+), a
-      0000EA AF               [ 4]  327 	xor	a, a
-      0000EB 22               [ 8]  328 	ld	(hl+), a
-      0000EC AF               [ 4]  329 	xor	a, a
-      0000ED 22               [ 8]  330 	ld	(hl+), a
-      0000EE AF               [ 4]  331 	xor	a, a
-      0000EF 22               [ 8]  332 	ld	(hl+), a
-      0000F0 AF               [ 4]  333 	xor	a, a
-      0000F1 22               [ 8]  334 	ld	(hl+), a
-      0000F2 AF               [ 4]  335 	xor	a, a
-      0000F3 22               [ 8]  336 	ld	(hl+), a
-      0000F4 AF               [ 4]  337 	xor	a, a
-      0000F5 22               [ 8]  338 	ld	(hl+), a
-      0000F6 AF               [ 4]  339 	xor	a, a
-      0000F7 22               [ 8]  340 	ld	(hl+), a
-      0000F8 AF               [ 4]  341 	xor	a, a
-      0000F9 22               [ 8]  342 	ld	(hl+), a
-      0000FA AF               [ 4]  343 	xor	a, a
-      0000FB 22               [ 8]  344 	ld	(hl+), a
-      0000FC AF               [ 4]  345 	xor	a, a
-      0000FD 22               [ 8]  346 	ld	(hl+), a
-      0000FE 3E 01            [ 8]  347 	ld	a,#0x01
-      000100 22               [ 8]  348 	ld	(hl+),a
-      000101 22               [ 8]  349 	ld	(hl+), a
-      000102 AF               [ 4]  350 	xor	a, a
-      000103 22               [ 8]  351 	ld	(hl+), a
-      000104 AF               [ 4]  352 	xor	a, a
-      000105 22               [ 8]  353 	ld	(hl+), a
-      000106 AF               [ 4]  354 	xor	a, a
-      000107 22               [ 8]  355 	ld	(hl+), a
-      000108 AF               [ 4]  356 	xor	a, a
-      000109 22               [ 8]  357 	ld	(hl+), a
-      00010A AF               [ 4]  358 	xor	a, a
-      00010B 22               [ 8]  359 	ld	(hl+), a
-      00010C AF               [ 4]  360 	xor	a, a
-      00010D 22               [ 8]  361 	ld	(hl+), a
-      00010E 3E 01            [ 8]  362 	ld	a,#0x01
-      000110 22               [ 8]  363 	ld	(hl+),a
-      000111 22               [ 8]  364 	ld	(hl+), a
-      000112 AF               [ 4]  365 	xor	a, a
-      000113 22               [ 8]  366 	ld	(hl+), a
-      000114 AF               [ 4]  367 	xor	a, a
-      000115 22               [ 8]  368 	ld	(hl+), a
-      000116 AF               [ 4]  369 	xor	a, a
-      000117 22               [ 8]  370 	ld	(hl+), a
-      000118 AF               [ 4]  371 	xor	a, a
-      000119 22               [ 8]  372 	ld	(hl+), a
-      00011A AF               [ 4]  373 	xor	a, a
-      00011B 22               [ 8]  374 	ld	(hl+), a
-      00011C AF               [ 4]  375 	xor	a, a
-      00011D 22               [ 8]  376 	ld	(hl+), a
-      00011E AF               [ 4]  377 	xor	a, a
-      00011F 22               [ 8]  378 	ld	(hl+), a
-      000120 AF               [ 4]  379 	xor	a, a
-      000121 22               [ 8]  380 	ld	(hl+), a
-      000122 AF               [ 4]  381 	xor	a, a
-      000123 22               [ 8]  382 	ld	(hl+), a
-      000124 AF               [ 4]  383 	xor	a, a
-      000125 22               [ 8]  384 	ld	(hl+), a
-      000126 AF               [ 4]  385 	xor	a, a
-      000127 22               [ 8]  386 	ld	(hl+), a
-      000128 AF               [ 4]  387 	xor	a, a
-      000129 22               [ 8]  388 	ld	(hl+), a
-      00012A AF               [ 4]  389 	xor	a, a
-      00012B 22               [ 8]  390 	ld	(hl+), a
-      00012C AF               [ 4]  391 	xor	a, a
-      00012D 22               [ 8]  392 	ld	(hl+), a
-      00012E AF               [ 4]  393 	xor	a, a
-      00012F 22               [ 8]  394 	ld	(hl+), a
-      000130 AF               [ 4]  395 	xor	a, a
-      000131 22               [ 8]  396 	ld	(hl+), a
-      000132 AF               [ 4]  397 	xor	a, a
-      000133 22               [ 8]  398 	ld	(hl+), a
-      000134 AF               [ 4]  399 	xor	a, a
-      000135 22               [ 8]  400 	ld	(hl+), a
-      000136 77               [ 8]  401 	ld	(hl), a
-                                    402 ;src/scene1.c:69: memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
-      000137 21 00 00         [12]  403 	ld	hl, #0
-      00013A 39               [ 8]  404 	add	hl, sp
-      00013B 59               [ 4]  405 	ld	e, c
-      00013C 50               [ 4]  406 	ld	d, b
-      00013D 01 40 00         [12]  407 	ld	bc, #0x0040
-      000140 C5               [16]  408 	push	bc
-      000141 4D               [ 4]  409 	ld	c, l
-      000142 44               [ 4]  410 	ld	b, h
-      000143 CDr32r00         [24]  411 	call	_memcpy
-                                    412 ;src/scene1.c:74: }
-      000146 E8 40            [16]  413 	add	sp, #64
-      000148 C9               [16]  414 	ret
-                                    415 ;src/scene1.c:76: void gbPrintMap(Scene1_State *pState)
-                                    416 ;	---------------------------------
-                                    417 ; Function gbPrintMap
-                                    418 ; ---------------------------------
-      000149                        419 _gbPrintMap::
-      000149 3B               [ 8]  420 	dec	sp
-      00014A 3B               [ 8]  421 	dec	sp
-                                    422 ;src/scene1.c:79: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-      00014B F8 01            [12]  423 	ldhl	sp,	#1
-      00014D 36 00            [12]  424 	ld	(hl), #0x00
-      00014F                        425 00108$:
-      00014F F8 01            [12]  426 	ldhl	sp,	#1
-      000151 3A               [ 8]  427 	ld	a, (hl-)
-      000152 E6 07            [ 8]  428 	and	a, #0x07
-      000154 22               [ 8]  429 	ld	(hl+), a
-      000155 3A               [ 8]  430 	ld	a, (hl-)
-      000156 4F               [ 4]  431 	ld	c, a
-      000157 CB 39            [ 8]  432 	srl	c
-      000159 CB 39            [ 8]  433 	srl	c
-      00015B CB 39            [ 8]  434 	srl	c
-      00015D 7E               [ 8]  435 	ld	a, (hl)
-      00015E D6 06            [ 8]  436 	sub	a, #0x06
-      000160 30 3C            [12]  437 	jr	NC, 00106$
-      000162 79               [ 4]  438 	ld	a, c
-      000163 D6 08            [ 8]  439 	sub	a, #0x08
-      000165 30 37            [12]  440 	jr	NC, 00106$
-      000167 23               [ 8]  441 	inc	hl
-      000168 D5               [16]  442 	push	de
-      000169 6E               [ 8]  443 	ld	l, (hl)
-      00016A 26 00            [ 8]  444 	ld	h, #0x00
-      00016C 19               [ 8]  445 	add	hl, de
-      00016D D1               [12]  446 	pop	de
-      00016E 4D               [ 4]  447 	ld	c, l
-      00016F 44               [ 4]  448 	ld	b, h
-      000170 0A               [ 8]  449 	ld	a, (bc)
-      000171 4F               [ 4]  450 	ld	c, a
-      000172 06 00            [ 8]  451 	ld	b, #0x00
-      000174 D5               [16]  452 	push	de
-      000175 C5               [16]  453 	push	bc
-      000176 01rA9r01         [12]  454 	ld	bc, #___str_0
-      000179 C5               [16]  455 	push	bc
-      00017A CDr00r00         [24]  456 	call	_printf
-      00017D E8 04            [16]  457 	add	sp, #4
-      00017F D1               [12]  458 	pop	de
-      000180 F8 00            [12]  459 	ldhl	sp,	#0
-      000182 6E               [ 8]  460 	ld	l, (hl)
-                                    461 ;	spillPairReg hl
-                                    462 ;	spillPairReg hl
-      000183 26 00            [ 8]  463 	ld	h, #0x00
-                                    464 ;	spillPairReg hl
-                                    465 ;	spillPairReg hl
-      000185 23               [ 8]  466 	inc	hl
-      000186 D5               [16]  467 	push	de
-      000187 01 06 00         [12]  468 	ld	bc, #0x0006
-      00018A 5D               [ 4]  469 	ld	e, l
-      00018B 54               [ 4]  470 	ld	d, h
-      00018C CDr00r00         [24]  471 	call	__modsint
-      00018F D1               [12]  472 	pop	de
-      000190 78               [ 4]  473 	ld	a, b
-      000191 B1               [ 4]  474 	or	a, c
-      000192 20 0A            [12]  475 	jr	NZ, 00106$
-      000194 D5               [16]  476 	push	de
-      000195 3E 0A            [ 8]  477 	ld	a, #0x0a
-      000197 F5               [16]  478 	push	af
-      000198 33               [ 8]  479 	inc	sp
-      000199 CDr00r00         [24]  480 	call	_putchar
-      00019C 33               [ 8]  481 	inc	sp
-      00019D D1               [12]  482 	pop	de
-      00019E                        483 00106$:
-      00019E F8 01            [12]  484 	ldhl	sp,	#1
-      0001A0 34               [12]  485 	inc	(hl)
-      0001A1 7E               [ 8]  486 	ld	a, (hl)
-      0001A2 D6 40            [ 8]  487 	sub	a, #0x40
-      0001A4 38 A9            [12]  488 	jr	C, 00108$
-                                    489 ;src/scene1.c:84: }
-      0001A6 33               [ 8]  490 	inc	sp
-      0001A7 33               [ 8]  491 	inc	sp
-      0001A8 C9               [16]  492 	ret
-      0001A9                        493 ___str_0:
-      0001A9 25 64 20               494 	.ascii "%d "
-      0001AC 00                     495 	.db 0x00
-                                    496 ;src/scene1.c:89: void gbFindChanceOfLostPkg(Scene1_State *pState)
-                                    497 ;	---------------------------------
-                                    498 ; Function gbFindChanceOfLostPkg
-                                    499 ; ---------------------------------
-      0001AD                        500 _gbFindChanceOfLostPkg::
-      0001AD E8 FA            [16]  501 	add	sp, #-6
-      0001AF F8 03            [12]  502 	ldhl	sp,	#3
-      0001B1 7B               [ 4]  503 	ld	a, e
-      0001B2 22               [ 8]  504 	ld	(hl+), a
-      0001B3 72               [ 8]  505 	ld	(hl), d
-                                    506 ;src/scene1.c:91: U8  chance          = 64,
-      0001B4 F8 00            [12]  507 	ldhl	sp,	#0
-                                    508 ;src/scene1.c:92: modifier        = 0,
-      0001B6 3E 40            [ 8]  509 	ld	a, #0x40
-      0001B8 22               [ 8]  510 	ld	(hl+), a
-      0001B9 36 00            [12]  511 	ld	(hl), #0x00
-                                    512 ;src/scene1.c:96: GB_ITERATE_MAP(idx, GB_FUNCTION_BODY(
-      0001BB F8 05            [12]  513 	ldhl	sp,	#5
-      0001BD 36 00            [12]  514 	ld	(hl), #0x00
-      0001BF                        515 00113$:
-      0001BF F8 05            [12]  516 	ldhl	sp,	#5
-      0001C1 7E               [ 8]  517 	ld	a, (hl)
-      0001C2 E6 07            [ 8]  518 	and	a, #0x07
-      0001C4 F8 02            [12]  519 	ldhl	sp,	#2
-      0001C6 77               [ 8]  520 	ld	(hl), a
-      0001C7 F8 05            [12]  521 	ldhl	sp,	#5
-      0001C9 5E               [ 8]  522 	ld	e, (hl)
-      0001CA CB 3B            [ 8]  523 	srl	e
-      0001CC CB 3B            [ 8]  524 	srl	e
-      0001CE CB 3B            [ 8]  525 	srl	e
-      0001D0 F8 02            [12]  526 	ldhl	sp,	#2
-      0001D2 7E               [ 8]  527 	ld	a, (hl)
-      0001D3 D6 06            [ 8]  528 	sub	a, #0x06
-      0001D5 30 7A            [12]  529 	jr	NC, 00111$
-      0001D7 7B               [ 4]  530 	ld	a, e
-      0001D8 D6 08            [ 8]  531 	sub	a, #0x08
-      0001DA 30 75            [12]  532 	jr	NC, 00111$
-      0001DC 4E               [ 8]  533 	ld	c, (hl)
-      0001DD 06 00            [ 8]  534 	ld	b, #0x00
-      0001DF 03               [ 8]  535 	inc	bc
-      0001E0 69               [ 4]  536 	ld	l, c
-                                    537 ;	spillPairReg hl
-                                    538 ;	spillPairReg hl
-      0001E1 50               [ 4]  539 	ld	d, b
-      0001E2 D5               [16]  540 	push	de
-      0001E3 01 06 00         [12]  541 	ld	bc, #0x0006
-      0001E6 5D               [ 4]  542 	ld	e, l
-      0001E7 CDr00r00         [24]  543 	call	__modsint
-      0001EA 69               [ 4]  544 	ld	l, c
-                                    545 ;	spillPairReg hl
-                                    546 ;	spillPairReg hl
-      0001EB D1               [12]  547 	pop	de
-      0001EC 7B               [ 4]  548 	ld	a, e
-      0001ED D6 05            [ 8]  549 	sub	a, #0x05
-      0001EF 3E 00            [ 8]  550 	ld	a, #0x00
-      0001F1 17               [ 4]  551 	rla
-      0001F2 4F               [ 4]  552 	ld	c, a
-      0001F3 78               [ 4]  553 	ld	a, b
-      0001F4 B5               [ 4]  554 	or	a, l
-      0001F5 28 27            [12]  555 	jr	Z, 00109$
-      0001F7 79               [ 4]  556 	ld	a, c
-      0001F8 B7               [ 4]  557 	or	a, a
-      0001F9 28 56            [12]  558 	jr	Z, 00111$
-      0001FB 3E 07            [ 8]  559 	ld	a, #0x07
-      0001FD 93               [ 4]  560 	sub	a, e
-      0001FE 87               [ 4]  561 	add	a, a
-      0001FF 87               [ 4]  562 	add	a, a
-      000200 87               [ 4]  563 	add	a, a
-      000201 F8 02            [12]  564 	ldhl	sp,	#2
-      000203 4E               [ 8]  565 	ld	c, (hl)
-      000204 23               [ 8]  566 	inc	hl
-      000205 81               [ 4]  567 	add	a, c
-      000206 5F               [ 4]  568 	ld	e, a
-      000207 16 00            [ 8]  569 	ld	d, #0x00
-      000209 2A               [ 8]  570 	ld	a,	(hl+)
-      00020A 66               [ 8]  571 	ld	h, (hl)
-      00020B 6F               [ 4]  572 	ld	l, a
-      00020C 19               [ 8]  573 	add	hl, de
-      00020D 4D               [ 4]  574 	ld	c, l
-      00020E 44               [ 4]  575 	ld	b, h
-      00020F 0A               [ 8]  576 	ld	a, (bc)
-      000210 D6 01            [ 8]  577 	sub	a,#0x01
-      000212 3E 00            [ 8]  578 	ld	a, #0x00
-      000214 17               [ 4]  579 	rla
-      000215 EE 01            [ 8]  580 	xor	a, #0x01
-      000217 F8 01            [12]  581 	ldhl	sp,	#1
-      000219 4E               [ 8]  582 	ld	c, (hl)
-      00021A 81               [ 4]  583 	add	a, c
-      00021B 77               [ 8]  584 	ld	(hl), a
-      00021C 18 33            [12]  585 	jr	00111$
-      00021E                        586 00109$:
-      00021E F8 01            [12]  587 	ldhl	sp,	#1
-      000220 7E               [ 8]  588 	ld	a, (hl)
-      000221 B7               [ 4]  589 	or	a, a
-      000222 28 2D            [12]  590 	jr	Z, 00111$
-      000224 79               [ 4]  591 	ld	a, c
-      000225 B7               [ 4]  592 	or	a, a
-      000226 20 03            [12]  593 	jr	NZ, 00117$
-      000228 11 04 00         [12]  594 	ld	de, #0x0004
-      00022B                        595 00117$:
-      00022B F8 05            [12]  596 	ldhl	sp,	#5
-      00022D 73               [ 8]  597 	ld	(hl), e
-      00022E CDr00r00         [24]  598 	call	_rand
-      000231 F8 01            [12]  599 	ldhl	sp,	#1
-      000233 6E               [ 8]  600 	ld	l, (hl)
-      000234 26 00            [ 8]  601 	ld	h, #0x00
-      000236 29               [ 8]  602 	add	hl, hl
-      000237 29               [ 8]  603 	add	hl, hl
-      000238 16 00            [ 8]  604 	ld	d, #0x00
-      00023A 4D               [ 4]  605 	ld	c, l
-      00023B 44               [ 4]  606 	ld	b, h
-      00023C CDr00r00         [24]  607 	call	__modsint
-      00023F 11r7Cr02         [12]  608 	ld	de, #_pkgLossFactor
-      000242 F8 05            [12]  609 	ldhl	sp,	#5
-      000244 6E               [ 8]  610 	ld	l, (hl)
-      000245 26 00            [ 8]  611 	ld	h, #0x00
-      000247 19               [ 8]  612 	add	hl, de
-      000248 5D               [ 4]  613 	ld	e, l
-      000249 54               [ 4]  614 	ld	d, h
-      00024A 1A               [ 8]  615 	ld	a, (de)
-      00024B 81               [ 4]  616 	add	a, c
-      00024C F8 00            [12]  617 	ldhl	sp,	#0
-      00024E 77               [ 8]  618 	ld	(hl), a
-      00024F 18 09            [12]  619 	jr	00112$
-      000251                        620 00111$:
-      000251 F8 05            [12]  621 	ldhl	sp,	#5
-      000253 34               [12]  622 	inc	(hl)
-      000254 7E               [ 8]  623 	ld	a, (hl)
-      000255 D6 40            [ 8]  624 	sub	a, #0x40
-      000257 DArBFr01         [16]  625 	jp	C, 00113$
-      00025A                        626 00112$:
-                                    627 ;src/scene1.c:122: printf("Package loss%%: %d%%\n", (chance*100) / 255);
-      00025A F8 00            [12]  628 	ldhl	sp,	#0
-      00025C 4E               [ 8]  629 	ld	c, (hl)
-      00025D 06 00            [ 8]  630 	ld	b, #0x00
-      00025F 69               [ 4]  631 	ld	l, c
-      000260 60               [ 4]  632 	ld	h, b
-      000261 29               [ 8]  633 	add	hl, hl
-      000262 09               [ 8]  634 	add	hl, bc
-      000263 29               [ 8]  635 	add	hl, hl
-      000264 29               [ 8]  636 	add	hl, hl
-      000265 29               [ 8]  637 	add	hl, hl
-      000266 09               [ 8]  638 	add	hl, bc
-      000267 29               [ 8]  639 	add	hl, hl
-      000268 29               [ 8]  640 	add	hl, hl
-      000269 01 FF 00         [12]  641 	ld	bc, #0x00ff
-      00026C 5D               [ 4]  642 	ld	e, l
-      00026D 54               [ 4]  643 	ld	d, h
-      00026E CDr00r00         [24]  644 	call	__divsint
-      000271 C5               [16]  645 	push	bc
-      000272 11r81r02         [12]  646 	ld	de, #___str_1
-      000275 D5               [16]  647 	push	de
-      000276 CDr00r00         [24]  648 	call	_printf
-                                    649 ;src/scene1.c:123: }
-      000279 E8 0A            [16]  650 	add	sp, #10
-      00027B C9               [16]  651 	ret
-      00027C                        652 _pkgLossFactor:
-      00027C CD                     653 	.db #0xcd	; 205
-      00027D B4                     654 	.db #0xb4	; 180
-      00027E 9A                     655 	.db #0x9a	; 154
-      00027F 80                     656 	.db #0x80	; 128
-      000280 40                     657 	.db #0x40	; 64
-      000281                        658 ___str_1:
-      000281 50 61 63 6B 61 67 65   659 	.ascii "Package loss%%: %d%%"
+                                     80 	.area _HOME
+                                     81 	.area _GSINIT
+                                     82 	.area _GSFINAL
+                                     83 	.area _GSINIT
+                                     84 ;--------------------------------------------------------
+                                     85 ; Home
+                                     86 ;--------------------------------------------------------
+                                     87 	.area _HOME
+                                     88 	.area _HOME
+                                     89 ;--------------------------------------------------------
+                                     90 ; code
+                                     91 ;--------------------------------------------------------
+                                     92 	.area _CODE
+                                     93 ;src/utils.h:8: static void copy_U8_array(uint8_t *dest, const uint8_t* source, uint8_t size)
+                                     94 ;	---------------------------------
+                                     95 ; Function copy_U8_array
+                                     96 ; ---------------------------------
+      000000                         97 _copy_U8_array:
+      000000 E8 FB            [16]   98 	add	sp, #-5
+      000002 F8 02            [12]   99 	ldhl	sp,	#2
+      000004 7B               [ 4]  100 	ld	a, e
+      000005 22               [ 8]  101 	ld	(hl+), a
+      000006 72               [ 8]  102 	ld	(hl), d
+      000007 33               [ 8]  103 	inc	sp
+      000008 33               [ 8]  104 	inc	sp
+      000009 C5               [16]  105 	push	bc
+                                    106 ;src/utils.h:10: while (size != 0)
+      00000A F8 07            [12]  107 	ldhl	sp,	#7
+      00000C 7E               [ 8]  108 	ld	a, (hl)
+      00000D F8 04            [12]  109 	ldhl	sp,	#4
+      00000F 77               [ 8]  110 	ld	(hl), a
+      000010                        111 00101$:
+      000010 F8 04            [12]  112 	ldhl	sp,	#4
+      000012 7E               [ 8]  113 	ld	a, (hl)
+      000013 B7               [ 4]  114 	or	a, a
+      000014 28 17            [12]  115 	jr	Z, 00104$
+                                    116 ;src/utils.h:12: dest[size-1] = source[size-1];
+      000016 3A               [ 8]  117 	ld	a, (hl-)
+      000017 4F               [ 4]  118 	ld	c, a
+      000018 06 00            [ 8]  119 	ld	b, #0x00
+      00001A 0B               [ 8]  120 	dec	bc
+      00001B 3A               [ 8]  121 	ld	a, (hl-)
+      00001C 6E               [ 8]  122 	ld	l, (hl)
+      00001D 67               [ 4]  123 	ld	h, a
+      00001E 09               [ 8]  124 	add	hl, bc
+      00001F 5D               [ 4]  125 	ld	e, l
+      000020 54               [ 4]  126 	ld	d, h
+      000021 E1               [12]  127 	pop	hl
+      000022 E5               [16]  128 	push	hl
+      000023 09               [ 8]  129 	add	hl, bc
+      000024 4D               [ 4]  130 	ld	c, l
+      000025 44               [ 4]  131 	ld	b, h
+      000026 0A               [ 8]  132 	ld	a, (bc)
+      000027 12               [ 8]  133 	ld	(de), a
+                                    134 ;src/utils.h:13: --size;
+      000028 F8 04            [12]  135 	ldhl	sp,	#4
+      00002A 35               [12]  136 	dec	(hl)
+      00002B 18 E3            [12]  137 	jr	00101$
+      00002D                        138 00104$:
+                                    139 ;src/utils.h:15: }
+      00002D E8 05            [16]  140 	add	sp, #5
+      00002F E1               [12]  141 	pop	hl
+      000030 33               [ 8]  142 	inc	sp
+      000031 E9               [ 4]  143 	jp	(hl)
+                                    144 ;src/utils.h:17: static void* memcpy(void *dest, const void *source, uint16_t size)
+                                    145 ;	---------------------------------
+                                    146 ; Function memcpy
+                                    147 ; ---------------------------------
+      000032                        148 _memcpy:
+      000032 E8 F8            [16]  149 	add	sp, #-8
+      000034 F8 06            [12]  150 	ldhl	sp,	#6
+      000036 7B               [ 4]  151 	ld	a, e
+      000037 22               [ 8]  152 	ld	(hl+), a
+                                    153 ;src/utils.h:19: uint8_t*        dest_u8 = dest;
+      000038 7A               [ 4]  154 	ld	a, d
+      000039 32               [ 8]  155 	ld	(hl-), a
+      00003A 7E               [ 8]  156 	ld	a, (hl)
+      00003B F8 00            [12]  157 	ldhl	sp,	#0
+      00003D 77               [ 8]  158 	ld	(hl), a
+      00003E F8 07            [12]  159 	ldhl	sp,	#7
+      000040 7E               [ 8]  160 	ld	a, (hl)
+      000041 F8 01            [12]  161 	ldhl	sp,	#1
+                                    162 ;src/utils.h:20: const uint8_t*  src_u8  = source;
+      000043 22               [ 8]  163 	ld	(hl+), a
+      000044 79               [ 4]  164 	ld	a, c
+      000045 22               [ 8]  165 	ld	(hl+), a
+      000046 70               [ 8]  166 	ld	(hl), b
+                                    167 ;src/utils.h:22: while (size)
+      000047 F8 0A            [12]  168 	ldhl	sp,	#10
+      000049 2A               [ 8]  169 	ld	a, (hl+)
+      00004A 4F               [ 4]  170 	ld	c, a
+      00004B 46               [ 8]  171 	ld	b, (hl)
+      00004C                        172 00101$:
+      00004C 78               [ 4]  173 	ld	a, b
+      00004D B1               [ 4]  174 	or	a, c
+      00004E 28 29            [12]  175 	jr	Z, 00103$
+                                    176 ;src/utils.h:24: dest_u8[size-1] = src_u8[size-1];
+      000050 59               [ 4]  177 	ld	e, c
+      000051 50               [ 4]  178 	ld	d, b
+      000052 1B               [ 8]  179 	dec	de
+      000053 D5               [16]  180 	push	de
+      000054 F8 02            [12]  181 	ldhl	sp,	#2
+      000056 2A               [ 8]  182 	ld	a,	(hl+)
+      000057 66               [ 8]  183 	ld	h, (hl)
+      000058 6F               [ 4]  184 	ld	l, a
+      000059 19               [ 8]  185 	add	hl, de
+      00005A D1               [12]  186 	pop	de
+      00005B E5               [16]  187 	push	hl
+      00005C 7D               [ 4]  188 	ld	a, l
+      00005D F8 06            [12]  189 	ldhl	sp,	#6
+      00005F 77               [ 8]  190 	ld	(hl), a
+      000060 E1               [12]  191 	pop	hl
+      000061 7C               [ 4]  192 	ld	a, h
+      000062 F8 05            [12]  193 	ldhl	sp,	#5
+      000064 77               [ 8]  194 	ld	(hl), a
+      000065 F8 02            [12]  195 	ldhl	sp,	#2
+      000067 2A               [ 8]  196 	ld	a,	(hl+)
+      000068 66               [ 8]  197 	ld	h, (hl)
+      000069 6F               [ 4]  198 	ld	l, a
+      00006A 19               [ 8]  199 	add	hl, de
+      00006B 5D               [ 4]  200 	ld	e, l
+      00006C 54               [ 4]  201 	ld	d, h
+      00006D 1A               [ 8]  202 	ld	a, (de)
+      00006E F8 04            [12]  203 	ldhl	sp,	#4
+      000070 F5               [16]  204 	push	af
+      000071 2A               [ 8]  205 	ld	a,	(hl+)
+      000072 66               [ 8]  206 	ld	h, (hl)
+      000073 6F               [ 4]  207 	ld	l, a
+      000074 F1               [12]  208 	pop	af
+      000075 77               [ 8]  209 	ld	(hl), a
+                                    210 ;src/utils.h:25: --size;
+      000076 0B               [ 8]  211 	dec	bc
+      000077 18 D3            [12]  212 	jr	00101$
+      000079                        213 00103$:
+                                    214 ;src/utils.h:28: return dest;
+      000079 F8 06            [12]  215 	ldhl	sp,	#6
+      00007B 2A               [ 8]  216 	ld	a, (hl+)
+      00007C 4F               [ 4]  217 	ld	c, a
+      00007D 46               [ 8]  218 	ld	b, (hl)
+                                    219 ;src/utils.h:29: }
+      00007E E8 08            [16]  220 	add	sp, #8
+      000080 E1               [12]  221 	pop	hl
+      000081 F1               [12]  222 	pop	af
+      000082 E9               [ 4]  223 	jp	(hl)
+                                    224 ;src/common.h:8: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
+                                    225 ;	---------------------------------
+                                    226 ; Function gbCountdownSeconds
+                                    227 ; ---------------------------------
+      000083                        228 _gbCountdownSeconds::
+      000083 6F               [ 4]  229 	ld	l, a
+                                    230 ;	spillPairReg hl
+                                    231 ;	spillPairReg hl
+                                    232 ;src/common.h:10: return max_time - ((time(NULL)-start_time) % (max_time+1));
+      000084 E5               [16]  233 	push	hl
+      000085 D5               [16]  234 	push	de
+      000086 11 00 00         [12]  235 	ld	de, #0x0000
+      000089 CDr00r00         [24]  236 	call	_time
+      00008C D1               [12]  237 	pop	de
+      00008D E1               [12]  238 	pop	hl
+      00008E 79               [ 4]  239 	ld	a, c
+      00008F 16 00            [ 8]  240 	ld	d, #0x00
+      000091 93               [ 4]  241 	sub	a, e
+      000092 5F               [ 4]  242 	ld	e, a
+      000093 78               [ 4]  243 	ld	a, b
+      000094 9A               [ 4]  244 	sbc	a, d
+      000095 57               [ 4]  245 	ld	d, a
+      000096 4D               [ 4]  246 	ld	c, l
+      000097 06 00            [ 8]  247 	ld	b, #0x00
+      000099 03               [ 8]  248 	inc	bc
+      00009A E5               [16]  249 	push	hl
+      00009B CDr00r00         [24]  250 	call	__moduint
+      00009E E1               [12]  251 	pop	hl
+      00009F 7D               [ 4]  252 	ld	a, l
+      0000A0 91               [ 4]  253 	sub	a, c
+                                    254 ;src/common.h:11: }
+      0000A1 C9               [16]  255 	ret
+      0000A2                        256 _number_start_index:
+      0000A2 64                     257 	.db #0x64	; 100	'd'
+                                    258 ;src/common.h:15: void gbFadeIn()
+                                    259 ;	---------------------------------
+                                    260 ; Function gbFadeIn
+                                    261 ; ---------------------------------
+      0000A3                        262 _gbFadeIn::
+                                    263 ;src/common.h:17: BGP_REG = 0xFF;    
+      0000A3 3E FF            [ 8]  264 	ld	a, #0xff
+      0000A5 E0r00            [12]  265 	ldh	(_BGP_REG + 0), a
+                                    266 ;src/common.h:18: delay(100);
+      0000A7 11 64 00         [12]  267 	ld	de, #0x0064
+      0000AA CDr00r00         [24]  268 	call	_delay
+                                    269 ;src/common.h:19: BGP_REG = 0xFE;
+      0000AD 3E FE            [ 8]  270 	ld	a, #0xfe
+      0000AF E0r00            [12]  271 	ldh	(_BGP_REG + 0), a
+                                    272 ;src/common.h:20: delay(100);
+      0000B1 11 64 00         [12]  273 	ld	de, #0x0064
+      0000B4 CDr00r00         [24]  274 	call	_delay
+                                    275 ;src/common.h:21: BGP_REG = 0xF9;
+      0000B7 3E F9            [ 8]  276 	ld	a, #0xf9
+      0000B9 E0r00            [12]  277 	ldh	(_BGP_REG + 0), a
+                                    278 ;src/common.h:22: delay(100);
+      0000BB 11 64 00         [12]  279 	ld	de, #0x0064
+      0000BE CDr00r00         [24]  280 	call	_delay
+                                    281 ;src/common.h:23: BGP_REG = 0xE4;
+      0000C1 3E E4            [ 8]  282 	ld	a, #0xe4
+      0000C3 E0r00            [12]  283 	ldh	(_BGP_REG + 0), a
+                                    284 ;src/common.h:24: delay(100);
+      0000C5 11 64 00         [12]  285 	ld	de, #0x0064
+                                    286 ;src/common.h:25: }
+      0000C8 C3r00r00         [16]  287 	jp	_delay
+                                    288 ;src/common.h:27: void gbFadeOut()
+                                    289 ;	---------------------------------
+                                    290 ; Function gbFadeOut
+                                    291 ; ---------------------------------
+      0000CB                        292 _gbFadeOut::
+                                    293 ;src/common.h:29: BGP_REG = 0xE4;    
+      0000CB 3E E4            [ 8]  294 	ld	a, #0xe4
+      0000CD E0r00            [12]  295 	ldh	(_BGP_REG + 0), a
+                                    296 ;src/common.h:30: delay(100);
+      0000CF 11 64 00         [12]  297 	ld	de, #0x0064
+      0000D2 CDr00r00         [24]  298 	call	_delay
+                                    299 ;src/common.h:31: BGP_REG = 0xF9;
+      0000D5 3E F9            [ 8]  300 	ld	a, #0xf9
+      0000D7 E0r00            [12]  301 	ldh	(_BGP_REG + 0), a
+                                    302 ;src/common.h:32: delay(100);
+      0000D9 11 64 00         [12]  303 	ld	de, #0x0064
+      0000DC CDr00r00         [24]  304 	call	_delay
+                                    305 ;src/common.h:33: BGP_REG = 0xFE;
+      0000DF 3E FE            [ 8]  306 	ld	a, #0xfe
+      0000E1 E0r00            [12]  307 	ldh	(_BGP_REG + 0), a
+                                    308 ;src/common.h:34: delay(100);
+      0000E3 11 64 00         [12]  309 	ld	de, #0x0064
+      0000E6 CDr00r00         [24]  310 	call	_delay
+                                    311 ;src/common.h:35: BGP_REG = 0xFF;
+      0000E9 3E FF            [ 8]  312 	ld	a, #0xff
+      0000EB E0r00            [12]  313 	ldh	(_BGP_REG + 0), a
+                                    314 ;src/common.h:36: delay(100);
+      0000ED 11 64 00         [12]  315 	ld	de, #0x0064
+                                    316 ;src/common.h:37: }
+      0000F0 C3r00r00         [16]  317 	jp	_delay
+                                    318 ;src/scene1.c:16: B8 gbQueuePush( P2 xy, 
+                                    319 ;	---------------------------------
+                                    320 ; Function gbQueuePush
+                                    321 ; ---------------------------------
+      0000F3                        322 _gbQueuePush::
+      0000F3 4F               [ 4]  323 	ld	c, a
+                                    324 ;src/scene1.c:19: if (pQueue->m_size >= GB_MAX_QUEUE_LENGTH)
+      0000F4 21 40 00         [12]  325 	ld	hl, #0x0040
+      0000F7 19               [ 8]  326 	add	hl, de
+      0000F8 7E               [ 8]  327 	ld	a, (hl)
+      0000F9 FE 40            [ 8]  328 	cp	a, #0x40
+      0000FB 38 02            [12]  329 	jr	C, 00102$
+                                    330 ;src/scene1.c:20: return FALSE;
+      0000FD AF               [ 4]  331 	xor	a, a
+      0000FE C9               [16]  332 	ret
+      0000FF                        333 00102$:
+                                    334 ;src/scene1.c:22: pQueue->m_queue[pQueue->m_size++] = xy;
+      0000FF 47               [ 4]  335 	ld	b, a
+      000100 04               [ 4]  336 	inc	b
+      000101 70               [ 8]  337 	ld	(hl), b
+      000102 6F               [ 4]  338 	ld	l, a
+      000103 26 00            [ 8]  339 	ld	h, #0x00
+      000105 19               [ 8]  340 	add	hl, de
+      000106 71               [ 8]  341 	ld	(hl), c
+                                    342 ;src/scene1.c:23: return TRUE;
+      000107 3E 01            [ 8]  343 	ld	a, #0x01
+                                    344 ;src/scene1.c:24: }
+      000109 C9               [16]  345 	ret
+                                    346 ;src/scene1.c:26: B8 gbQueuePop(  P2 *xy, 
+                                    347 ;	---------------------------------
+                                    348 ; Function gbQueuePop
+                                    349 ; ---------------------------------
+      00010A                        350 _gbQueuePop::
+      00010A D5               [16]  351 	push	de
+                                    352 ;src/scene1.c:29: if (pQueue->m_size == 0)
+      00010B 21 40 00         [12]  353 	ld	hl, #0x0040
+      00010E 09               [ 8]  354 	add	hl, bc
+      00010F 7E               [ 8]  355 	ld	a, (hl)
+                                    356 ;src/scene1.c:30: return FALSE;
+      000110 B7               [ 4]  357 	or	a,a
+      000111 28 0C            [12]  358 	jr	Z, 00103$
+                                    359 ;src/scene1.c:32: *xy = pQueue->m_queue[--pQueue->m_size];
+      000113 3D               [ 4]  360 	dec	a
+      000114 77               [ 8]  361 	ld	(hl), a
+      000115 6F               [ 4]  362 	ld	l, a
+      000116 26 00            [ 8]  363 	ld	h, #0x00
+      000118 09               [ 8]  364 	add	hl, bc
+      000119 4E               [ 8]  365 	ld	c, (hl)
+      00011A E1               [12]  366 	pop	hl
+      00011B E5               [16]  367 	push	hl
+      00011C 71               [ 8]  368 	ld	(hl), c
+                                    369 ;src/scene1.c:33: return TRUE;
+      00011D 3E 01            [ 8]  370 	ld	a, #0x01
+      00011F                        371 00103$:
+                                    372 ;src/scene1.c:34: }
+      00011F 33               [ 8]  373 	inc	sp
+      000120 33               [ 8]  374 	inc	sp
+      000121 C9               [16]  375 	ret
+                                    376 ;src/scene1.c:59: void gbFindChanceOfLostPkg(Scene1_State *pState)
+                                    377 ;	---------------------------------
+                                    378 ; Function gbFindChanceOfLostPkg
+                                    379 ; ---------------------------------
+      000122                        380 _gbFindChanceOfLostPkg::
+      000122 E8 FA            [16]  381 	add	sp, #-6
+      000124 F8 03            [12]  382 	ldhl	sp,	#3
+      000126 7B               [ 4]  383 	ld	a, e
+      000127 22               [ 8]  384 	ld	(hl+), a
+      000128 72               [ 8]  385 	ld	(hl), d
+                                    386 ;src/scene1.c:61: U8  chance          = 64,
+      000129 F8 00            [12]  387 	ldhl	sp,	#0
+                                    388 ;src/scene1.c:62: modifier        = 0,
+      00012B 3E 40            [ 8]  389 	ld	a, #0x40
+      00012D 22               [ 8]  390 	ld	(hl+), a
+      00012E 36 00            [12]  391 	ld	(hl), #0x00
+                                    392 ;src/scene1.c:66: GB_ITERATE_MAP(idx, GB_FUNCTION_BODY(
+      000130 F8 05            [12]  393 	ldhl	sp,	#5
+      000132 36 00            [12]  394 	ld	(hl), #0x00
+      000134                        395 00113$:
+      000134 F8 05            [12]  396 	ldhl	sp,	#5
+      000136 7E               [ 8]  397 	ld	a, (hl)
+      000137 E6 07            [ 8]  398 	and	a, #0x07
+      000139 F8 02            [12]  399 	ldhl	sp,	#2
+      00013B 77               [ 8]  400 	ld	(hl), a
+      00013C F8 05            [12]  401 	ldhl	sp,	#5
+      00013E 5E               [ 8]  402 	ld	e, (hl)
+      00013F CB 3B            [ 8]  403 	srl	e
+      000141 CB 3B            [ 8]  404 	srl	e
+      000143 CB 3B            [ 8]  405 	srl	e
+      000145 F8 02            [12]  406 	ldhl	sp,	#2
+      000147 7E               [ 8]  407 	ld	a, (hl)
+      000148 D6 06            [ 8]  408 	sub	a, #0x06
+      00014A 30 7A            [12]  409 	jr	NC, 00111$
+      00014C 7B               [ 4]  410 	ld	a, e
+      00014D D6 08            [ 8]  411 	sub	a, #0x08
+      00014F 30 75            [12]  412 	jr	NC, 00111$
+      000151 4E               [ 8]  413 	ld	c, (hl)
+      000152 06 00            [ 8]  414 	ld	b, #0x00
+      000154 03               [ 8]  415 	inc	bc
+      000155 69               [ 4]  416 	ld	l, c
+                                    417 ;	spillPairReg hl
+                                    418 ;	spillPairReg hl
+      000156 50               [ 4]  419 	ld	d, b
+      000157 D5               [16]  420 	push	de
+      000158 01 06 00         [12]  421 	ld	bc, #0x0006
+      00015B 5D               [ 4]  422 	ld	e, l
+      00015C CDr00r00         [24]  423 	call	__modsint
+      00015F 69               [ 4]  424 	ld	l, c
+                                    425 ;	spillPairReg hl
+                                    426 ;	spillPairReg hl
+      000160 D1               [12]  427 	pop	de
+      000161 7B               [ 4]  428 	ld	a, e
+      000162 D6 05            [ 8]  429 	sub	a, #0x05
+      000164 3E 00            [ 8]  430 	ld	a, #0x00
+      000166 17               [ 4]  431 	rla
+      000167 4F               [ 4]  432 	ld	c, a
+      000168 78               [ 4]  433 	ld	a, b
+      000169 B5               [ 4]  434 	or	a, l
+      00016A 28 27            [12]  435 	jr	Z, 00109$
+      00016C 79               [ 4]  436 	ld	a, c
+      00016D B7               [ 4]  437 	or	a, a
+      00016E 28 56            [12]  438 	jr	Z, 00111$
+      000170 3E 07            [ 8]  439 	ld	a, #0x07
+      000172 93               [ 4]  440 	sub	a, e
+      000173 87               [ 4]  441 	add	a, a
+      000174 87               [ 4]  442 	add	a, a
+      000175 87               [ 4]  443 	add	a, a
+      000176 F8 02            [12]  444 	ldhl	sp,	#2
+      000178 4E               [ 8]  445 	ld	c, (hl)
+      000179 23               [ 8]  446 	inc	hl
+      00017A 81               [ 4]  447 	add	a, c
+      00017B 5F               [ 4]  448 	ld	e, a
+      00017C 16 00            [ 8]  449 	ld	d, #0x00
+      00017E 2A               [ 8]  450 	ld	a,	(hl+)
+      00017F 66               [ 8]  451 	ld	h, (hl)
+      000180 6F               [ 4]  452 	ld	l, a
+      000181 19               [ 8]  453 	add	hl, de
+      000182 4D               [ 4]  454 	ld	c, l
+      000183 44               [ 4]  455 	ld	b, h
+      000184 0A               [ 8]  456 	ld	a, (bc)
+      000185 D6 01            [ 8]  457 	sub	a,#0x01
+      000187 3E 00            [ 8]  458 	ld	a, #0x00
+      000189 17               [ 4]  459 	rla
+      00018A EE 01            [ 8]  460 	xor	a, #0x01
+      00018C F8 01            [12]  461 	ldhl	sp,	#1
+      00018E 4E               [ 8]  462 	ld	c, (hl)
+      00018F 81               [ 4]  463 	add	a, c
+      000190 77               [ 8]  464 	ld	(hl), a
+      000191 18 33            [12]  465 	jr	00111$
+      000193                        466 00109$:
+      000193 F8 01            [12]  467 	ldhl	sp,	#1
+      000195 7E               [ 8]  468 	ld	a, (hl)
+      000196 B7               [ 4]  469 	or	a, a
+      000197 28 2D            [12]  470 	jr	Z, 00111$
+      000199 79               [ 4]  471 	ld	a, c
+      00019A B7               [ 4]  472 	or	a, a
+      00019B 20 03            [12]  473 	jr	NZ, 00117$
+      00019D 11 04 00         [12]  474 	ld	de, #0x0004
+      0001A0                        475 00117$:
+      0001A0 F8 05            [12]  476 	ldhl	sp,	#5
+      0001A2 73               [ 8]  477 	ld	(hl), e
+      0001A3 CDr00r00         [24]  478 	call	_rand
+      0001A6 F8 01            [12]  479 	ldhl	sp,	#1
+      0001A8 6E               [ 8]  480 	ld	l, (hl)
+      0001A9 26 00            [ 8]  481 	ld	h, #0x00
+      0001AB 29               [ 8]  482 	add	hl, hl
+      0001AC 29               [ 8]  483 	add	hl, hl
+      0001AD 16 00            [ 8]  484 	ld	d, #0x00
+      0001AF 4D               [ 4]  485 	ld	c, l
+      0001B0 44               [ 4]  486 	ld	b, h
+      0001B1 CDr00r00         [24]  487 	call	__modsint
+      0001B4 11rF1r01         [12]  488 	ld	de, #_pkgLossFactor
+      0001B7 F8 05            [12]  489 	ldhl	sp,	#5
+      0001B9 6E               [ 8]  490 	ld	l, (hl)
+      0001BA 26 00            [ 8]  491 	ld	h, #0x00
+      0001BC 19               [ 8]  492 	add	hl, de
+      0001BD 5D               [ 4]  493 	ld	e, l
+      0001BE 54               [ 4]  494 	ld	d, h
+      0001BF 1A               [ 8]  495 	ld	a, (de)
+      0001C0 81               [ 4]  496 	add	a, c
+      0001C1 F8 00            [12]  497 	ldhl	sp,	#0
+      0001C3 77               [ 8]  498 	ld	(hl), a
+      0001C4 18 09            [12]  499 	jr	00112$
+      0001C6                        500 00111$:
+      0001C6 F8 05            [12]  501 	ldhl	sp,	#5
+      0001C8 34               [12]  502 	inc	(hl)
+      0001C9 7E               [ 8]  503 	ld	a, (hl)
+      0001CA D6 40            [ 8]  504 	sub	a, #0x40
+      0001CC DAr34r01         [16]  505 	jp	C, 00113$
+      0001CF                        506 00112$:
+                                    507 ;src/scene1.c:92: printf("Package loss%%: %d%%\n", (chance*100) / 255);
+      0001CF F8 00            [12]  508 	ldhl	sp,	#0
+      0001D1 4E               [ 8]  509 	ld	c, (hl)
+      0001D2 06 00            [ 8]  510 	ld	b, #0x00
+      0001D4 69               [ 4]  511 	ld	l, c
+      0001D5 60               [ 4]  512 	ld	h, b
+      0001D6 29               [ 8]  513 	add	hl, hl
+      0001D7 09               [ 8]  514 	add	hl, bc
+      0001D8 29               [ 8]  515 	add	hl, hl
+      0001D9 29               [ 8]  516 	add	hl, hl
+      0001DA 29               [ 8]  517 	add	hl, hl
+      0001DB 09               [ 8]  518 	add	hl, bc
+      0001DC 29               [ 8]  519 	add	hl, hl
+      0001DD 29               [ 8]  520 	add	hl, hl
+      0001DE 01 FF 00         [12]  521 	ld	bc, #0x00ff
+      0001E1 5D               [ 4]  522 	ld	e, l
+      0001E2 54               [ 4]  523 	ld	d, h
+      0001E3 CDr00r00         [24]  524 	call	__divsint
+      0001E6 C5               [16]  525 	push	bc
+      0001E7 11rF6r01         [12]  526 	ld	de, #___str_0
+      0001EA D5               [16]  527 	push	de
+      0001EB CDr00r00         [24]  528 	call	_printf
+                                    529 ;src/scene1.c:93: }
+      0001EE E8 0A            [16]  530 	add	sp, #10
+      0001F0 C9               [16]  531 	ret
+      0001F1                        532 _pkgLossFactor:
+      0001F1 CD                     533 	.db #0xcd	; 205
+      0001F2 B4                     534 	.db #0xb4	; 180
+      0001F3 9A                     535 	.db #0x9a	; 154
+      0001F4 80                     536 	.db #0x80	; 128
+      0001F5 40                     537 	.db #0x40	; 64
+      0001F6                        538 ___str_0:
+      0001F6 50 61 63 6B 61 67 65   539 	.ascii "Package loss%%: %d%%"
              20 6C 6F 73 73 25 25
              3A 20 25 64 25 25
-      000295 0A                     660 	.db 0x0a
-      000296 00                     661 	.db 0x00
-                                    662 ;src/scene1.c:126: B8 gbPointInBounds(P2 xy)
-                                    663 ;	---------------------------------
-                                    664 ; Function gbPointInBounds
-                                    665 ; ---------------------------------
-      000297                        666 _gbPointInBounds::
-                                    667 ;src/scene1.c:128: return (((xy & 7) < 6) && ((xy >> 3) < 8));
-      000297 4F               [ 4]  668 	ld	c, a
-      000298 E6 07            [ 8]  669 	and	a, #0x07
-      00029A D6 06            [ 8]  670 	sub	a, #0x06
-      00029C 30 0A            [12]  671 	jr	NC, 00103$
-      00029E 79               [ 4]  672 	ld	a, c
-      00029F CB 37            [ 8]  673 	swap	a
-      0002A1 07               [ 4]  674 	rlca
-      0002A2 E6 1F            [ 8]  675 	and	a, #0x1f
-      0002A4 D6 08            [ 8]  676 	sub	a, #0x08
-      0002A6 38 02            [12]  677 	jr	C, 00104$
-      0002A8                        678 00103$:
-      0002A8 AF               [ 4]  679 	xor	a, a
-      0002A9 C9               [16]  680 	ret
-      0002AA                        681 00104$:
-      0002AA 3E 01            [ 8]  682 	ld	a, #0x01
-                                    683 ;src/scene1.c:129: }
-      0002AC C9               [16]  684 	ret
-                                    685 ;src/scene1.c:131: P2 gbSampleDirection(   P2 xy, 
-                                    686 ;	---------------------------------
-                                    687 ; Function gbSampleDirection
-                                    688 ; ---------------------------------
-      0002AD                        689 _gbSampleDirection::
-      0002AD 3B               [ 8]  690 	dec	sp
-      0002AE 3B               [ 8]  691 	dec	sp
-      0002AF 4F               [ 4]  692 	ld	c, a
-      0002B0 7B               [ 4]  693 	ld	a, e
-                                    694 ;src/scene1.c:134: P2 next_point = xy;
-      0002B1 59               [ 4]  695 	ld	e, c
-                                    696 ;src/scene1.c:138: next_point =    xy + 1;
-      0002B2 F8 00            [12]  697 	ldhl	sp,	#0
-      0002B4 71               [ 8]  698 	ld	(hl), c
-                                    699 ;src/scene1.c:149: next_point =    (xy & 0x07) | 
-      0002B5 23               [ 8]  700 	inc	hl
-      0002B6 F5               [16]  701 	push	af
-      0002B7 79               [ 4]  702 	ld	a, c
-      0002B8 E6 07            [ 8]  703 	and	a, #0x07
-      0002BA 77               [ 8]  704 	ld	(hl), a
-      0002BB F1               [12]  705 	pop	af
-                                    706 ;src/scene1.c:135: switch (dir)
-      0002BC B7               [ 4]  707 	or	a, a
-      0002BD 28 25            [12]  708 	jr	Z, 00103$
-      0002BF FE 01            [ 8]  709 	cp	a, #0x01
-      0002C1 28 2C            [12]  710 	jr	Z, 00104$
-                                    711 ;src/scene1.c:139: next_point =    (xy & 0x38) | 
-      0002C3 F5               [16]  712 	push	af
-      0002C4 79               [ 4]  713 	ld	a, c
-      0002C5 E6 38            [ 8]  714 	and	a, #0x38
-      0002C7 4F               [ 4]  715 	ld	c, a
-      0002C8 F1               [12]  716 	pop	af
-                                    717 ;src/scene1.c:135: switch (dir)
-      0002C9 FE 02            [ 8]  718 	cp	a, #0x02
-      0002CB 28 0D            [12]  719 	jr	Z, 00102$
-      0002CD D6 03            [ 8]  720 	sub	a, #0x03
-      0002CF 20 27            [12]  721 	jr	NZ, 00105$
-                                    722 ;src/scene1.c:138: next_point =    xy + 1;
-      0002D1 2B               [ 8]  723 	dec	hl
-      0002D2 7E               [ 8]  724 	ld	a, (hl)
-      0002D3 3C               [ 4]  725 	inc	a
-                                    726 ;src/scene1.c:140: (next_point & 0x07);
-      0002D4 E6 07            [ 8]  727 	and	a, #0x07
-      0002D6 B1               [ 4]  728 	or	a, c
-      0002D7 5F               [ 4]  729 	ld	e, a
-                                    730 ;src/scene1.c:141: break;
-      0002D8 18 1E            [12]  731 	jr	00105$
-                                    732 ;src/scene1.c:142: case GB_LEFT:
-      0002DA                        733 00102$:
-                                    734 ;src/scene1.c:143: next_point =    xy - 1;
-      0002DA F8 00            [12]  735 	ldhl	sp,	#0
-      0002DC 7E               [ 8]  736 	ld	a, (hl)
-      0002DD 3D               [ 4]  737 	dec	a
-                                    738 ;src/scene1.c:145: (next_point & 0x07);
-      0002DE E6 07            [ 8]  739 	and	a, #0x07
-      0002E0 B1               [ 4]  740 	or	a, c
-      0002E1 5F               [ 4]  741 	ld	e, a
-                                    742 ;src/scene1.c:146: break;
-      0002E2 18 14            [12]  743 	jr	00105$
-                                    744 ;src/scene1.c:147: case GB_UP:
-      0002E4                        745 00103$:
-                                    746 ;src/scene1.c:148: next_point =    xy + 8;
-      0002E4 F8 00            [12]  747 	ldhl	sp,	#0
-                                    748 ;src/scene1.c:150: (next_point & 0x38);
-      0002E6 2A               [ 8]  749 	ld	a, (hl+)
-      0002E7 C6 08            [ 8]  750 	add	a, #0x08
-      0002E9 E6 38            [ 8]  751 	and	a, #0x38
-      0002EB B6               [ 8]  752 	or	a, (hl)
-      0002EC 5F               [ 4]  753 	ld	e, a
-                                    754 ;src/scene1.c:151: break;
-      0002ED 18 09            [12]  755 	jr	00105$
-                                    756 ;src/scene1.c:152: case GB_DOWN:
-      0002EF                        757 00104$:
-                                    758 ;src/scene1.c:153: next_point =    xy - 8;
-      0002EF F8 00            [12]  759 	ldhl	sp,	#0
-                                    760 ;src/scene1.c:155: (next_point & 0x38);
-      0002F1 2A               [ 8]  761 	ld	a, (hl+)
-      0002F2 C6 F8            [ 8]  762 	add	a, #0xf8
-      0002F4 E6 38            [ 8]  763 	and	a, #0x38
-      0002F6 B6               [ 8]  764 	or	a, (hl)
-      0002F7 5F               [ 4]  765 	ld	e, a
-                                    766 ;src/scene1.c:157: }
-      0002F8                        767 00105$:
-                                    768 ;src/scene1.c:159: return next_point;
-      0002F8 7B               [ 4]  769 	ld	a, e
-                                    770 ;src/scene1.c:160: }
-      0002F9 33               [ 8]  771 	inc	sp
-      0002FA 33               [ 8]  772 	inc	sp
-      0002FB C9               [16]  773 	ret
-                                    774 ;src/scene1.c:163: void gbMapSampleNeighbor(   P2 current_point, 
-                                    775 ;	---------------------------------
-                                    776 ; Function gbMapSampleNeighbor
-                                    777 ; ---------------------------------
-      0002FC                        778 _gbMapSampleNeighbor::
-      0002FC E8 F8            [16]  779 	add	sp, #-8
-                                    780 ;src/scene1.c:169: P2 next_point = gbSampleDirection(current_point, dir);
-      0002FE CDrADr02         [24]  781 	call	_gbSampleDirection
-      000301 4F               [ 4]  782 	ld	c, a
-                                    783 ;src/scene1.c:172: if (!gbPointInBounds(next_point) || 
-      000302 C5               [16]  784 	push	bc
-      000303 79               [ 4]  785 	ld	a, c
-      000304 CDr97r02         [24]  786 	call	_gbPointInBounds
-      000307 C1               [12]  787 	pop	bc
-      000308 B7               [ 4]  788 	or	a, a
-      000309 CArB9r03         [16]  789 	jp	Z,00110$
-                                    790 ;src/scene1.c:173: pState->m_map[next_point] != current_color) // THIS IS A LOAD-BEARING COLOR CHECK. WITHOUT THIS, THE FUNCTION WILL FAIL.
-      00030C F8 0B            [12]  791 	ldhl	sp,	#11
-      00030E 7E               [ 8]  792 	ld	a, (hl)
-      00030F F8 00            [12]  793 	ldhl	sp,	#0
-      000311 77               [ 8]  794 	ld	(hl), a
-      000312 F8 0C            [12]  795 	ldhl	sp,	#12
-      000314 7E               [ 8]  796 	ld	a, (hl)
-      000315 F8 01            [12]  797 	ldhl	sp,	#1
-      000317 77               [ 8]  798 	ld	(hl), a
-      000318 D1               [12]  799 	pop	de
-      000319 D5               [16]  800 	push	de
-      00031A 69               [ 4]  801 	ld	l, c
-      00031B 26 00            [ 8]  802 	ld	h, #0x00
-      00031D 19               [ 8]  803 	add	hl, de
-      00031E 5D               [ 4]  804 	ld	e, l
-      00031F 54               [ 4]  805 	ld	d, h
-      000320 1A               [ 8]  806 	ld	a, (de)
-      000321 47               [ 4]  807 	ld	b, a
-      000322 F8 0A            [12]  808 	ldhl	sp,	#10
-      000324 7E               [ 8]  809 	ld	a, (hl)
-      000325 90               [ 4]  810 	sub	a, b
-                                    811 ;src/scene1.c:174: return;
-      000326 C2rB9r03         [16]  812 	jp	NZ,00110$
-                                    813 ;src/scene1.c:176: success = gbQueuePush(next_point, pQueue);
-      000329 F8 0D            [12]  814 	ldhl	sp,	#13
-      00032B 2A               [ 8]  815 	ld	a, (hl+)
-      00032C 5F               [ 4]  816 	ld	e, a
-      00032D 56               [ 8]  817 	ld	d, (hl)
-      00032E 79               [ 4]  818 	ld	a, c
-      00032F CDr83r00         [24]  819 	call	_gbQueuePush
-                                    820 ;src/scene1.c:177: if (success)
-      000332 B7               [ 4]  821 	or	a, a
-                                    822 ;src/scene1.c:178: return;
-                                    823 ;src/scene1.c:181: for (int i = 0; i < pQueue->m_size; i++)
-      000333 C2rB9r03         [16]  824 	jp	NZ,00110$
-      000336 F8 0D            [12]  825 	ldhl	sp,	#13
-      000338 2A               [ 8]  826 	ld	a, (hl+)
-      000339 4F               [ 4]  827 	ld	c, a
-      00033A 46               [ 8]  828 	ld	b, (hl)
-      00033B 21 40 00         [12]  829 	ld	hl, #0x0040
-      00033E 09               [ 8]  830 	add	hl, bc
-      00033F E5               [16]  831 	push	hl
-      000340 7D               [ 4]  832 	ld	a, l
-      000341 F8 04            [12]  833 	ldhl	sp,	#4
-      000343 77               [ 8]  834 	ld	(hl), a
-      000344 E1               [12]  835 	pop	hl
-      000345 7C               [ 4]  836 	ld	a, h
-      000346 F8 03            [12]  837 	ldhl	sp,	#3
-      000348 77               [ 8]  838 	ld	(hl), a
-      000349 AF               [ 4]  839 	xor	a, a
-      00034A F8 06            [12]  840 	ldhl	sp,	#6
-      00034C 22               [ 8]  841 	ld	(hl+), a
-      00034D 77               [ 8]  842 	ld	(hl), a
-      00034E                        843 00108$:
-      00034E F8 02            [12]  844 	ldhl	sp,#2
-      000350 2A               [ 8]  845 	ld	a, (hl+)
-      000351 5F               [ 4]  846 	ld	e, a
-      000352 2A               [ 8]  847 	ld	a, (hl+)
-      000353 57               [ 4]  848 	ld	d, a
-      000354 1A               [ 8]  849 	ld	a, (de)
-      000355 22               [ 8]  850 	ld	(hl+), a
-      000356 36 00            [12]  851 	ld	(hl), #0x00
-      000358 F8 06            [12]  852 	ldhl	sp,	#6
-      00035A 5D               [ 4]  853 	ld	e, l
-      00035B 54               [ 4]  854 	ld	d, h
-      00035C F8 04            [12]  855 	ldhl	sp,	#4
-      00035E 1A               [ 8]  856 	ld	a, (de)
-      00035F 13               [ 8]  857 	inc	de
-      000360 96               [ 8]  858 	sub	a, (hl)
-      000361 23               [ 8]  859 	inc	hl
-      000362 1A               [ 8]  860 	ld	a, (de)
-      000363 9E               [ 8]  861 	sbc	a, (hl)
-      000364 1A               [ 8]  862 	ld	a, (de)
-      000365 57               [ 4]  863 	ld	d, a
-      000366 CB 7E            [12]  864 	bit	7, (hl)
-      000368 28 07            [12]  865 	jr	Z, 00142$
-      00036A CB 7A            [ 8]  866 	bit	7, d
-      00036C 20 08            [12]  867 	jr	NZ, 00143$
-      00036E BF               [ 4]  868 	cp	a, a
-      00036F 18 05            [12]  869 	jr	00143$
-      000371                        870 00142$:
-      000371 CB 7A            [ 8]  871 	bit	7, d
-      000373 28 01            [12]  872 	jr	Z, 00143$
-      000375 37               [ 4]  873 	scf
-      000376                        874 00143$:
-      000376 30 34            [12]  875 	jr	NC, 00106$
-                                    876 ;src/scene1.c:185: pQueue->m_queue[i] >> 3
-      000378 F8 06            [12]  877 	ldhl	sp,	#6
-      00037A 2A               [ 8]  878 	ld	a,	(hl+)
-      00037B 66               [ 8]  879 	ld	h, (hl)
-      00037C 6F               [ 4]  880 	ld	l, a
-      00037D 09               [ 8]  881 	add	hl, bc
-      00037E 5D               [ 4]  882 	ld	e, l
-      00037F 54               [ 4]  883 	ld	d, h
-      000380 1A               [ 8]  884 	ld	a, (de)
-      000381 F5               [16]  885 	push	af
-      000382 CB 37            [ 8]  886 	swap	a
-      000384 07               [ 4]  887 	rlca
-      000385 E6 1F            [ 8]  888 	and	a, #0x1f
-      000387 5F               [ 4]  889 	ld	e, a
-      000388 F1               [12]  890 	pop	af
-      000389 16 00            [ 8]  891 	ld	d, #0x00
-                                    892 ;src/scene1.c:184: pQueue->m_queue[i] & 7,
-                                    893 ;	spillPairReg hl
-                                    894 ;	spillPairReg hl
-      00038B E6 07            [ 8]  895 	and	a, #0x07
-      00038D 6F               [ 4]  896 	ld	l, a
-                                    897 ;	spillPairReg hl
-                                    898 ;	spillPairReg hl
-      00038E 26 00            [ 8]  899 	ld	h, #0x00
-                                    900 ;	spillPairReg hl
-                                    901 ;	spillPairReg hl
-                                    902 ;src/scene1.c:182: printf("queue[%d]: <%d,%d>\n", 
-      000390 C5               [16]  903 	push	bc
-      000391 D5               [16]  904 	push	de
-      000392 E5               [16]  905 	push	hl
-      000393 F8 0C            [12]  906 	ldhl	sp,	#12
-      000395 2A               [ 8]  907 	ld	a, (hl+)
-      000396 5F               [ 4]  908 	ld	e, a
-      000397 56               [ 8]  909 	ld	d, (hl)
-      000398 D5               [16]  910 	push	de
-      000399 11rBFr03         [12]  911 	ld	de, #___str_2
-      00039C D5               [16]  912 	push	de
-      00039D CDr00r00         [24]  913 	call	_printf
-      0003A0 E8 08            [16]  914 	add	sp, #8
-      0003A2 C1               [12]  915 	pop	bc
-                                    916 ;src/scene1.c:181: for (int i = 0; i < pQueue->m_size; i++)
-      0003A3 F8 06            [12]  917 	ldhl	sp,	#6
-      0003A5 34               [12]  918 	inc	(hl)
-      0003A6 20 A6            [12]  919 	jr	NZ, 00108$
-      0003A8 23               [ 8]  920 	inc	hl
-      0003A9 34               [12]  921 	inc	(hl)
-      0003AA 18 A2            [12]  922 	jr	00108$
-      0003AC                        923 00106$:
-                                    924 ;src/scene1.c:188: gbPrintMap(pState);
-      0003AC D1               [12]  925 	pop	de
-      0003AD D5               [16]  926 	push	de
-      0003AE CDr49r01         [24]  927 	call	_gbPrintMap
-                                    928 ;src/scene1.c:189: printf("error: failed to push to queue!");
-      0003B1 11rD3r03         [12]  929 	ld	de, #___str_3
-      0003B4 D5               [16]  930 	push	de
-      0003B5 CDr00r00         [24]  931 	call	_printf
-      0003B8 E1               [12]  932 	pop	hl
-      0003B9                        933 00110$:
-                                    934 ;src/scene1.c:190: }
-      0003B9 E8 08            [16]  935 	add	sp, #8
-      0003BB E1               [12]  936 	pop	hl
-      0003BC E8 05            [16]  937 	add	sp, #5
-      0003BE E9               [ 4]  938 	jp	(hl)
-      0003BF                        939 ___str_2:
-      0003BF 71 75 65 75 65 5B 25   940 	.ascii "queue[%d]: <%d,%d>"
+      00020A 0A                     540 	.db 0x0a
+      00020B 00                     541 	.db 0x00
+                                    542 ;src/scene1.c:96: B8 gbPointInBounds(P2 xy)
+                                    543 ;	---------------------------------
+                                    544 ; Function gbPointInBounds
+                                    545 ; ---------------------------------
+      00020C                        546 _gbPointInBounds::
+                                    547 ;src/scene1.c:98: return (((xy & 7) < 6) && ((xy >> 3) < 8));
+      00020C 4F               [ 4]  548 	ld	c, a
+      00020D E6 07            [ 8]  549 	and	a, #0x07
+      00020F D6 06            [ 8]  550 	sub	a, #0x06
+      000211 30 0A            [12]  551 	jr	NC, 00103$
+      000213 79               [ 4]  552 	ld	a, c
+      000214 CB 37            [ 8]  553 	swap	a
+      000216 07               [ 4]  554 	rlca
+      000217 E6 1F            [ 8]  555 	and	a, #0x1f
+      000219 D6 08            [ 8]  556 	sub	a, #0x08
+      00021B 38 02            [12]  557 	jr	C, 00104$
+      00021D                        558 00103$:
+      00021D AF               [ 4]  559 	xor	a, a
+      00021E C9               [16]  560 	ret
+      00021F                        561 00104$:
+      00021F 3E 01            [ 8]  562 	ld	a, #0x01
+                                    563 ;src/scene1.c:99: }
+      000221 C9               [16]  564 	ret
+                                    565 ;src/scene1.c:101: P2 gbSampleDirection(   P2 xy, 
+                                    566 ;	---------------------------------
+                                    567 ; Function gbSampleDirection
+                                    568 ; ---------------------------------
+      000222                        569 _gbSampleDirection::
+      000222 3B               [ 8]  570 	dec	sp
+      000223 3B               [ 8]  571 	dec	sp
+      000224 4F               [ 4]  572 	ld	c, a
+      000225 7B               [ 4]  573 	ld	a, e
+                                    574 ;src/scene1.c:104: P2 next_point = xy;
+      000226 59               [ 4]  575 	ld	e, c
+                                    576 ;src/scene1.c:108: next_point =    xy + 1;
+      000227 F8 00            [12]  577 	ldhl	sp,	#0
+      000229 71               [ 8]  578 	ld	(hl), c
+                                    579 ;src/scene1.c:119: next_point =    (xy & 0x07) | 
+      00022A 23               [ 8]  580 	inc	hl
+      00022B F5               [16]  581 	push	af
+      00022C 79               [ 4]  582 	ld	a, c
+      00022D E6 07            [ 8]  583 	and	a, #0x07
+      00022F 77               [ 8]  584 	ld	(hl), a
+      000230 F1               [12]  585 	pop	af
+                                    586 ;src/scene1.c:105: switch (dir)
+      000231 B7               [ 4]  587 	or	a, a
+      000232 28 25            [12]  588 	jr	Z, 00103$
+      000234 FE 01            [ 8]  589 	cp	a, #0x01
+      000236 28 2C            [12]  590 	jr	Z, 00104$
+                                    591 ;src/scene1.c:109: next_point =    (xy & 0x38) | 
+      000238 F5               [16]  592 	push	af
+      000239 79               [ 4]  593 	ld	a, c
+      00023A E6 38            [ 8]  594 	and	a, #0x38
+      00023C 4F               [ 4]  595 	ld	c, a
+      00023D F1               [12]  596 	pop	af
+                                    597 ;src/scene1.c:105: switch (dir)
+      00023E FE 02            [ 8]  598 	cp	a, #0x02
+      000240 28 0D            [12]  599 	jr	Z, 00102$
+      000242 D6 03            [ 8]  600 	sub	a, #0x03
+      000244 20 27            [12]  601 	jr	NZ, 00105$
+                                    602 ;src/scene1.c:108: next_point =    xy + 1;
+      000246 2B               [ 8]  603 	dec	hl
+      000247 7E               [ 8]  604 	ld	a, (hl)
+      000248 3C               [ 4]  605 	inc	a
+                                    606 ;src/scene1.c:110: (next_point & 0x07);
+      000249 E6 07            [ 8]  607 	and	a, #0x07
+      00024B B1               [ 4]  608 	or	a, c
+      00024C 5F               [ 4]  609 	ld	e, a
+                                    610 ;src/scene1.c:111: break;
+      00024D 18 1E            [12]  611 	jr	00105$
+                                    612 ;src/scene1.c:112: case GB_LEFT:
+      00024F                        613 00102$:
+                                    614 ;src/scene1.c:113: next_point =    xy - 1;
+      00024F F8 00            [12]  615 	ldhl	sp,	#0
+      000251 7E               [ 8]  616 	ld	a, (hl)
+      000252 3D               [ 4]  617 	dec	a
+                                    618 ;src/scene1.c:115: (next_point & 0x07);
+      000253 E6 07            [ 8]  619 	and	a, #0x07
+      000255 B1               [ 4]  620 	or	a, c
+      000256 5F               [ 4]  621 	ld	e, a
+                                    622 ;src/scene1.c:116: break;
+      000257 18 14            [12]  623 	jr	00105$
+                                    624 ;src/scene1.c:117: case GB_UP:
+      000259                        625 00103$:
+                                    626 ;src/scene1.c:118: next_point =    xy + 8;
+      000259 F8 00            [12]  627 	ldhl	sp,	#0
+                                    628 ;src/scene1.c:120: (next_point & 0x38);
+      00025B 2A               [ 8]  629 	ld	a, (hl+)
+      00025C C6 08            [ 8]  630 	add	a, #0x08
+      00025E E6 38            [ 8]  631 	and	a, #0x38
+      000260 B6               [ 8]  632 	or	a, (hl)
+      000261 5F               [ 4]  633 	ld	e, a
+                                    634 ;src/scene1.c:121: break;
+      000262 18 09            [12]  635 	jr	00105$
+                                    636 ;src/scene1.c:122: case GB_DOWN:
+      000264                        637 00104$:
+                                    638 ;src/scene1.c:123: next_point =    xy - 8;
+      000264 F8 00            [12]  639 	ldhl	sp,	#0
+                                    640 ;src/scene1.c:125: (next_point & 0x38);
+      000266 2A               [ 8]  641 	ld	a, (hl+)
+      000267 C6 F8            [ 8]  642 	add	a, #0xf8
+      000269 E6 38            [ 8]  643 	and	a, #0x38
+      00026B B6               [ 8]  644 	or	a, (hl)
+      00026C 5F               [ 4]  645 	ld	e, a
+                                    646 ;src/scene1.c:127: }
+      00026D                        647 00105$:
+                                    648 ;src/scene1.c:129: return next_point;
+      00026D 7B               [ 4]  649 	ld	a, e
+                                    650 ;src/scene1.c:130: }
+      00026E 33               [ 8]  651 	inc	sp
+      00026F 33               [ 8]  652 	inc	sp
+      000270 C9               [16]  653 	ret
+                                    654 ;src/scene1.c:133: void gbMapSampleNeighbor(   P2 current_point, 
+                                    655 ;	---------------------------------
+                                    656 ; Function gbMapSampleNeighbor
+                                    657 ; ---------------------------------
+      000271                        658 _gbMapSampleNeighbor::
+      000271 E8 FA            [16]  659 	add	sp, #-6
+                                    660 ;src/scene1.c:139: P2 next_point = gbSampleDirection(current_point, dir);
+      000273 CDr22r02         [24]  661 	call	_gbSampleDirection
+      000276 4F               [ 4]  662 	ld	c, a
+                                    663 ;src/scene1.c:142: if (!gbPointInBounds(next_point) || 
+      000277 C5               [16]  664 	push	bc
+      000278 79               [ 4]  665 	ld	a, c
+      000279 CDr0Cr02         [24]  666 	call	_gbPointInBounds
+      00027C C1               [12]  667 	pop	bc
+      00027D B7               [ 4]  668 	or	a, a
+      00027E CAr13r03         [16]  669 	jp	Z,00110$
+                                    670 ;src/scene1.c:143: pState->m_map[next_point] != current_color) // THIS IS A LOAD-BEARING COLOR CHECK. WITHOUT THIS, THE FUNCTION WILL FAIL.
+      000281 F8 09            [12]  671 	ldhl	sp,	#9
+      000283 2A               [ 8]  672 	ld	a, (hl+)
+      000284 5F               [ 4]  673 	ld	e, a
+      000285 56               [ 8]  674 	ld	d, (hl)
+      000286 69               [ 4]  675 	ld	l, c
+      000287 26 00            [ 8]  676 	ld	h, #0x00
+      000289 19               [ 8]  677 	add	hl, de
+      00028A 46               [ 8]  678 	ld	b, (hl)
+      00028B F8 08            [12]  679 	ldhl	sp,	#8
+      00028D 7E               [ 8]  680 	ld	a, (hl)
+      00028E 90               [ 4]  681 	sub	a, b
+                                    682 ;src/scene1.c:144: return;
+      00028F C2r13r03         [16]  683 	jp	NZ,00110$
+                                    684 ;src/scene1.c:146: success = gbQueuePush(next_point, pQueue);
+      000292 F8 0B            [12]  685 	ldhl	sp,	#11
+      000294 2A               [ 8]  686 	ld	a, (hl+)
+      000295 5F               [ 4]  687 	ld	e, a
+      000296 56               [ 8]  688 	ld	d, (hl)
+      000297 79               [ 4]  689 	ld	a, c
+      000298 CDrF3r00         [24]  690 	call	_gbQueuePush
+                                    691 ;src/scene1.c:147: if (success)
+      00029B B7               [ 4]  692 	or	a, a
+                                    693 ;src/scene1.c:148: return;
+                                    694 ;src/scene1.c:151: for (int i = 0; i < pQueue->m_size; i++)
+      00029C 20 75            [12]  695 	jr	NZ, 00110$
+      00029E F8 0B            [12]  696 	ldhl	sp,	#11
+      0002A0 2A               [ 8]  697 	ld	a, (hl+)
+      0002A1 4F               [ 4]  698 	ld	c, a
+      0002A2 46               [ 8]  699 	ld	b, (hl)
+      0002A3 21 40 00         [12]  700 	ld	hl, #0x0040
+      0002A6 09               [ 8]  701 	add	hl, bc
+      0002A7 33               [ 8]  702 	inc	sp
+      0002A8 33               [ 8]  703 	inc	sp
+      0002A9 E5               [16]  704 	push	hl
+      0002AA AF               [ 4]  705 	xor	a, a
+      0002AB F8 04            [12]  706 	ldhl	sp,	#4
+      0002AD 22               [ 8]  707 	ld	(hl+), a
+      0002AE 77               [ 8]  708 	ld	(hl), a
+      0002AF                        709 00108$:
+      0002AF D1               [12]  710 	pop	de
+      0002B0 D5               [16]  711 	push	de
+      0002B1 1A               [ 8]  712 	ld	a, (de)
+      0002B2 F8 02            [12]  713 	ldhl	sp,	#2
+      0002B4 22               [ 8]  714 	ld	(hl+), a
+      0002B5 36 00            [12]  715 	ld	(hl), #0x00
+      0002B7 F8 04            [12]  716 	ldhl	sp,	#4
+      0002B9 5D               [ 4]  717 	ld	e, l
+      0002BA 54               [ 4]  718 	ld	d, h
+      0002BB F8 02            [12]  719 	ldhl	sp,	#2
+      0002BD 1A               [ 8]  720 	ld	a, (de)
+      0002BE 13               [ 8]  721 	inc	de
+      0002BF 96               [ 8]  722 	sub	a, (hl)
+      0002C0 23               [ 8]  723 	inc	hl
+      0002C1 1A               [ 8]  724 	ld	a, (de)
+      0002C2 9E               [ 8]  725 	sbc	a, (hl)
+      0002C3 1A               [ 8]  726 	ld	a, (de)
+      0002C4 57               [ 4]  727 	ld	d, a
+      0002C5 CB 7E            [12]  728 	bit	7, (hl)
+      0002C7 28 07            [12]  729 	jr	Z, 00142$
+      0002C9 CB 7A            [ 8]  730 	bit	7, d
+      0002CB 20 08            [12]  731 	jr	NZ, 00143$
+      0002CD BF               [ 4]  732 	cp	a, a
+      0002CE 18 05            [12]  733 	jr	00143$
+      0002D0                        734 00142$:
+      0002D0 CB 7A            [ 8]  735 	bit	7, d
+      0002D2 28 01            [12]  736 	jr	Z, 00143$
+      0002D4 37               [ 4]  737 	scf
+      0002D5                        738 00143$:
+      0002D5 30 34            [12]  739 	jr	NC, 00106$
+                                    740 ;src/scene1.c:155: pQueue->m_queue[i] >> 3
+      0002D7 F8 04            [12]  741 	ldhl	sp,	#4
+      0002D9 2A               [ 8]  742 	ld	a,	(hl+)
+      0002DA 66               [ 8]  743 	ld	h, (hl)
+      0002DB 6F               [ 4]  744 	ld	l, a
+      0002DC 09               [ 8]  745 	add	hl, bc
+      0002DD 5D               [ 4]  746 	ld	e, l
+      0002DE 54               [ 4]  747 	ld	d, h
+      0002DF 1A               [ 8]  748 	ld	a, (de)
+      0002E0 F5               [16]  749 	push	af
+      0002E1 CB 37            [ 8]  750 	swap	a
+      0002E3 07               [ 4]  751 	rlca
+      0002E4 E6 1F            [ 8]  752 	and	a, #0x1f
+      0002E6 5F               [ 4]  753 	ld	e, a
+      0002E7 F1               [12]  754 	pop	af
+      0002E8 16 00            [ 8]  755 	ld	d, #0x00
+                                    756 ;src/scene1.c:154: pQueue->m_queue[i] & 7,
+                                    757 ;	spillPairReg hl
+                                    758 ;	spillPairReg hl
+      0002EA E6 07            [ 8]  759 	and	a, #0x07
+      0002EC 6F               [ 4]  760 	ld	l, a
+                                    761 ;	spillPairReg hl
+                                    762 ;	spillPairReg hl
+      0002ED 26 00            [ 8]  763 	ld	h, #0x00
+                                    764 ;	spillPairReg hl
+                                    765 ;	spillPairReg hl
+                                    766 ;src/scene1.c:152: printf("queue[%d]: <%d,%d>\n", 
+      0002EF C5               [16]  767 	push	bc
+      0002F0 D5               [16]  768 	push	de
+      0002F1 E5               [16]  769 	push	hl
+      0002F2 F8 0A            [12]  770 	ldhl	sp,	#10
+      0002F4 2A               [ 8]  771 	ld	a, (hl+)
+      0002F5 5F               [ 4]  772 	ld	e, a
+      0002F6 56               [ 8]  773 	ld	d, (hl)
+      0002F7 D5               [16]  774 	push	de
+      0002F8 11r19r03         [12]  775 	ld	de, #___str_1
+      0002FB D5               [16]  776 	push	de
+      0002FC CDr00r00         [24]  777 	call	_printf
+      0002FF E8 08            [16]  778 	add	sp, #8
+      000301 C1               [12]  779 	pop	bc
+                                    780 ;src/scene1.c:151: for (int i = 0; i < pQueue->m_size; i++)
+      000302 F8 04            [12]  781 	ldhl	sp,	#4
+      000304 34               [12]  782 	inc	(hl)
+      000305 20 A8            [12]  783 	jr	NZ, 00108$
+      000307 23               [ 8]  784 	inc	hl
+      000308 34               [12]  785 	inc	(hl)
+      000309 18 A4            [12]  786 	jr	00108$
+      00030B                        787 00106$:
+                                    788 ;src/scene1.c:159: printf("error: failed to push to queue!");
+      00030B 11r2Dr03         [12]  789 	ld	de, #___str_2
+      00030E D5               [16]  790 	push	de
+      00030F CDr00r00         [24]  791 	call	_printf
+      000312 E1               [12]  792 	pop	hl
+      000313                        793 00110$:
+                                    794 ;src/scene1.c:160: }
+      000313 E8 06            [16]  795 	add	sp, #6
+      000315 E1               [12]  796 	pop	hl
+      000316 E8 05            [16]  797 	add	sp, #5
+      000318 E9               [ 4]  798 	jp	(hl)
+      000319                        799 ___str_1:
+      000319 71 75 65 75 65 5B 25   800 	.ascii "queue[%d]: <%d,%d>"
              64 5D 3A 20 3C 25 64
              2C 25 64 3E
-      0003D1 0A                     941 	.db 0x0a
-      0003D2 00                     942 	.db 0x00
-      0003D3                        943 ___str_3:
-      0003D3 65 72 72 6F 72 3A 20   944 	.ascii "error: failed to push to queue!"
+      00032B 0A                     801 	.db 0x0a
+      00032C 00                     802 	.db 0x00
+      00032D                        803 ___str_2:
+      00032D 65 72 72 6F 72 3A 20   804 	.ascii "error: failed to push to queue!"
              66 61 69 6C 65 64 20
              74 6F 20 70 75 73 68
              20 74 6F 20 71 75 65
              75 65 21
-      0003F2 00                     945 	.db 0x00
-                                    946 ;src/scene1.c:192: B8 gbFloodFill( P2 xy, 
-                                    947 ;	---------------------------------
-                                    948 ; Function gbFloodFill
-                                    949 ; ---------------------------------
-      0003F3                        950 _gbFloodFill::
-      0003F3 E8 B6            [16]  951 	add	sp, #-74
-      0003F5 F8 49            [12]  952 	ldhl	sp,	#73
-      0003F7 32               [ 8]  953 	ld	(hl-), a
-      0003F8 73               [ 8]  954 	ld	(hl), e
-                                    955 ;src/scene1.c:202: point_queue.m_size      = 0;
-      0003F9 F8 40            [12]  956 	ldhl	sp,	#64
-      0003FB 36 00            [12]  957 	ld	(hl), #0x00
-                                    958 ;src/scene1.c:205: if (!gbPointInBounds(xy) || 
-      0003FD F8 49            [12]  959 	ldhl	sp,	#73
-      0003FF 7E               [ 8]  960 	ld	a, (hl)
-      000400 CDr97r02         [24]  961 	call	_gbPointInBounds
-      000403 F8 47            [12]  962 	ldhl	sp,#71
-      000405 77               [ 8]  963 	ld	(hl), a
-      000406 B7               [ 4]  964 	or	a, a
-      000407 28 1F            [12]  965 	jr	Z, 00101$
-                                    966 ;src/scene1.c:206: pState->m_map[xy] == color)
-      000409 F8 4C            [12]  967 	ldhl	sp,	#76
-      00040B 7E               [ 8]  968 	ld	a, (hl)
-      00040C F8 42            [12]  969 	ldhl	sp,	#66
-      00040E 77               [ 8]  970 	ld	(hl), a
-      00040F F8 4D            [12]  971 	ldhl	sp,	#77
-      000411 7E               [ 8]  972 	ld	a, (hl)
-      000412 F8 43            [12]  973 	ldhl	sp,	#67
-      000414 32               [ 8]  974 	ld	(hl-), a
-      000415 2A               [ 8]  975 	ld	a, (hl+)
-      000416 5F               [ 4]  976 	ld	e, a
-      000417 56               [ 8]  977 	ld	d, (hl)
-      000418 F8 49            [12]  978 	ldhl	sp,	#73
-      00041A 6E               [ 8]  979 	ld	l, (hl)
-      00041B 26 00            [ 8]  980 	ld	h, #0x00
-      00041D 19               [ 8]  981 	add	hl, de
-      00041E 4D               [ 4]  982 	ld	c, l
-      00041F 44               [ 4]  983 	ld	b, h
-      000420 0A               [ 8]  984 	ld	a, (bc)
-      000421 F8 47            [12]  985 	ldhl	sp,	#71
-      000423 22               [ 8]  986 	ld	(hl+), a
-      000424 3A               [ 8]  987 	ld	a, (hl-)
-      000425 96               [ 8]  988 	sub	a, (hl)
-      000426 20 04            [12]  989 	jr	NZ, 00102$
-      000428                        990 00101$:
-                                    991 ;src/scene1.c:207: return FALSE;
-      000428 AF               [ 4]  992 	xor	a, a
-      000429 C3rDFr04         [16]  993 	jp	00109$
-      00042C                        994 00102$:
-                                    995 ;src/scene1.c:210: start_color = pState->m_map[xy];
-      00042C F8 47            [12]  996 	ldhl	sp,	#71
-      00042E 7E               [ 8]  997 	ld	a, (hl)
-      00042F F8 44            [12]  998 	ldhl	sp,	#68
-      000431 77               [ 8]  999 	ld	(hl), a
-                                   1000 ;src/scene1.c:213: gbQueuePush(xy, &point_queue);
-      000432 21 00 00         [12] 1001 	ld	hl, #0
-      000435 39               [ 8] 1002 	add	hl, sp
-      000436 5D               [ 4] 1003 	ld	e, l
-      000437 54               [ 4] 1004 	ld	d, h
-      000438 F8 49            [12] 1005 	ldhl	sp,	#73
-      00043A 7E               [ 8] 1006 	ld	a, (hl)
-      00043B CDr83r00         [24] 1007 	call	_gbQueuePush
-                                   1008 ;src/scene1.c:215: do
-      00043E                       1009 00106$:
-                                   1010 ;src/scene1.c:218: gbQueuePop(&current_point, &point_queue);
-      00043E 21 00 00         [12] 1011 	ld	hl, #0
-      000441 39               [ 8] 1012 	add	hl, sp
-      000442 4D               [ 4] 1013 	ld	c, l
-      000443 44               [ 4] 1014 	ld	b, h
-      000444 F8 41            [12] 1015 	ldhl	sp,	#65
-      000446 5D               [ 4] 1016 	ld	e, l
-      000447 54               [ 4] 1017 	ld	d, h
-      000448 CDr9Ar00         [24] 1018 	call	_gbQueuePop
-                                   1019 ;src/scene1.c:219: current_color = pState->m_map[current_point];
-      00044B F8 41            [12] 1020 	ldhl	sp,	#65
-      00044D 2A               [ 8] 1021 	ld	a, (hl+)
-      00044E 5F               [ 4] 1022 	ld	e, a
-      00044F 16 00            [ 8] 1023 	ld	d, #0x00
-      000451 2A               [ 8] 1024 	ld	a,	(hl+)
-      000452 66               [ 8] 1025 	ld	h, (hl)
-      000453 6F               [ 4] 1026 	ld	l, a
-      000454 19               [ 8] 1027 	add	hl, de
-      000455 E5               [16] 1028 	push	hl
-      000456 7D               [ 4] 1029 	ld	a, l
-      000457 F8 47            [12] 1030 	ldhl	sp,	#71
-      000459 77               [ 8] 1031 	ld	(hl), a
-      00045A E1               [12] 1032 	pop	hl
-      00045B 7C               [ 4] 1033 	ld	a, h
-      00045C F8 46            [12] 1034 	ldhl	sp,	#70
-      00045E 32               [ 8] 1035 	ld	(hl-), a
-      00045F 2A               [ 8] 1036 	ld	a, (hl+)
-      000460 5F               [ 4] 1037 	ld	e, a
-      000461 2A               [ 8] 1038 	ld	a, (hl+)
-      000462 57               [ 4] 1039 	ld	d, a
-      000463 1A               [ 8] 1040 	ld	a, (de)
-      000464 77               [ 8] 1041 	ld	(hl), a
-                                   1042 ;src/scene1.c:221: if (start_color != current_color)
-      000465 F8 44            [12] 1043 	ldhl	sp,	#68
-      000467 7E               [ 8] 1044 	ld	a, (hl)
-      000468 F8 47            [12] 1045 	ldhl	sp,	#71
-      00046A 96               [ 8] 1046 	sub	a, (hl)
-      00046B 20 69            [12] 1047 	jr	NZ, 00107$
-                                   1048 ;src/scene1.c:225: pState->m_map[current_point] = color;
-      00046D F8 45            [12] 1049 	ldhl	sp,#69
-      00046F 2A               [ 8] 1050 	ld	a, (hl+)
-      000470 5F               [ 4] 1051 	ld	e, a
-      000471 2A               [ 8] 1052 	ld	a, (hl+)
-      000472 23               [ 8] 1053 	inc	hl
-      000473 57               [ 4] 1054 	ld	d, a
-      000474 7E               [ 8] 1055 	ld	a, (hl)
-      000475 12               [ 8] 1056 	ld	(de), a
-                                   1057 ;src/scene1.c:228: gbMapSampleNeighbor(current_point, GB_UP,      current_color, pState, &point_queue);
-      000476 21 00 00         [12] 1058 	ld	hl, #0
-      000479 39               [ 8] 1059 	add	hl, sp
-      00047A E5               [16] 1060 	push	hl
-      00047B F8 44            [12] 1061 	ldhl	sp,	#68
-      00047D 2A               [ 8] 1062 	ld	a, (hl+)
-      00047E 5F               [ 4] 1063 	ld	e, a
-      00047F 56               [ 8] 1064 	ld	d, (hl)
-      000480 D5               [16] 1065 	push	de
-      000481 F8 4B            [12] 1066 	ldhl	sp,	#75
-      000483 7E               [ 8] 1067 	ld	a, (hl)
-      000484 F5               [16] 1068 	push	af
-      000485 33               [ 8] 1069 	inc	sp
-      000486 1E 00            [ 8] 1070 	ld	e, #0x00
-      000488 F8 46            [12] 1071 	ldhl	sp,	#70
-      00048A 7E               [ 8] 1072 	ld	a, (hl)
-      00048B CDrFCr02         [24] 1073 	call	_gbMapSampleNeighbor
-                                   1074 ;src/scene1.c:229: gbMapSampleNeighbor(current_point, GB_DOWN,    current_color, pState, &point_queue);
-      00048E 21 00 00         [12] 1075 	ld	hl, #0
-      000491 39               [ 8] 1076 	add	hl, sp
-      000492 E5               [16] 1077 	push	hl
-      000493 F8 44            [12] 1078 	ldhl	sp,	#68
-      000495 2A               [ 8] 1079 	ld	a, (hl+)
-      000496 5F               [ 4] 1080 	ld	e, a
-      000497 56               [ 8] 1081 	ld	d, (hl)
-      000498 D5               [16] 1082 	push	de
-      000499 F8 4B            [12] 1083 	ldhl	sp,	#75
-      00049B 7E               [ 8] 1084 	ld	a, (hl)
-      00049C F5               [16] 1085 	push	af
-      00049D 33               [ 8] 1086 	inc	sp
-      00049E 1E 01            [ 8] 1087 	ld	e, #0x01
-      0004A0 F8 46            [12] 1088 	ldhl	sp,	#70
-      0004A2 7E               [ 8] 1089 	ld	a, (hl)
-      0004A3 CDrFCr02         [24] 1090 	call	_gbMapSampleNeighbor
-                                   1091 ;src/scene1.c:230: gbMapSampleNeighbor(current_point, GB_LEFT,    current_color, pState, &point_queue);
-      0004A6 21 00 00         [12] 1092 	ld	hl, #0
-      0004A9 39               [ 8] 1093 	add	hl, sp
-      0004AA E5               [16] 1094 	push	hl
-      0004AB F8 44            [12] 1095 	ldhl	sp,	#68
-      0004AD 2A               [ 8] 1096 	ld	a, (hl+)
-      0004AE 5F               [ 4] 1097 	ld	e, a
-      0004AF 56               [ 8] 1098 	ld	d, (hl)
-      0004B0 D5               [16] 1099 	push	de
-      0004B1 F8 4B            [12] 1100 	ldhl	sp,	#75
-      0004B3 7E               [ 8] 1101 	ld	a, (hl)
-      0004B4 F5               [16] 1102 	push	af
-      0004B5 33               [ 8] 1103 	inc	sp
-      0004B6 1E 02            [ 8] 1104 	ld	e, #0x02
-      0004B8 F8 46            [12] 1105 	ldhl	sp,	#70
-      0004BA 7E               [ 8] 1106 	ld	a, (hl)
-      0004BB CDrFCr02         [24] 1107 	call	_gbMapSampleNeighbor
-                                   1108 ;src/scene1.c:231: gbMapSampleNeighbor(current_point, GB_RIGHT,   current_color, pState, &point_queue);
-      0004BE 21 00 00         [12] 1109 	ld	hl, #0
-      0004C1 39               [ 8] 1110 	add	hl, sp
-      0004C2 E5               [16] 1111 	push	hl
-      0004C3 F8 44            [12] 1112 	ldhl	sp,	#68
-      0004C5 2A               [ 8] 1113 	ld	a, (hl+)
-      0004C6 5F               [ 4] 1114 	ld	e, a
-      0004C7 56               [ 8] 1115 	ld	d, (hl)
-      0004C8 D5               [16] 1116 	push	de
-      0004C9 F8 4B            [12] 1117 	ldhl	sp,	#75
-      0004CB 7E               [ 8] 1118 	ld	a, (hl)
-      0004CC F5               [16] 1119 	push	af
-      0004CD 33               [ 8] 1120 	inc	sp
-      0004CE 1E 03            [ 8] 1121 	ld	e, #0x03
-      0004D0 F8 46            [12] 1122 	ldhl	sp,	#70
-      0004D2 7E               [ 8] 1123 	ld	a, (hl)
-      0004D3 CDrFCr02         [24] 1124 	call	_gbMapSampleNeighbor
-      0004D6                       1125 00107$:
-                                   1126 ;src/scene1.c:233: while (point_queue.m_size != 0);
-      0004D6 F8 40            [12] 1127 	ldhl	sp,	#64
-      0004D8 7E               [ 8] 1128 	ld	a, (hl)
-      0004D9 B7               [ 4] 1129 	or	a, a
-      0004DA C2r3Er04         [16] 1130 	jp	NZ, 00106$
-                                   1131 ;src/scene1.c:235: return TRUE;
-      0004DD 3E 01            [ 8] 1132 	ld	a, #0x01
-      0004DF                       1133 00109$:
-                                   1134 ;src/scene1.c:236: }
-      0004DF E8 4A            [16] 1135 	add	sp, #74
-      0004E1 E1               [12] 1136 	pop	hl
-      0004E2 C1               [12] 1137 	pop	bc
-      0004E3 E9               [ 4] 1138 	jp	(hl)
-                                   1139 ;src/scene1.c:247: void scene1Start()
-                                   1140 ;	---------------------------------
-                                   1141 ; Function scene1Start
-                                   1142 ; ---------------------------------
-      0004E4                       1143 _scene1Start::
-                                   1144 ;src/scene1.c:250: initrand(start_time);
-      0004E4 21r04r00         [12] 1145 	ld	hl, #_start_time
-      0004E7 4E               [ 8] 1146 	ld	c, (hl)
-      0004E8 06 00            [ 8] 1147 	ld	b, #0x00
-      0004EA C5               [16] 1148 	push	bc
-      0004EB CDr00r00         [24] 1149 	call	_initrand
-      0004EE E1               [12] 1150 	pop	hl
-                                   1151 ;src/scene1.c:251: start_time = time(NULL);
-      0004EF 11 00 00         [12] 1152 	ld	de, #0x0000
-      0004F2 CDr00r00         [24] 1153 	call	_time
-      0004F5 21r04r00         [12] 1154 	ld	hl, #_start_time
-      0004F8 71               [ 8] 1155 	ld	(hl), c
-                                   1156 ;src/scene1.c:252: gbInitMap(&state);
-      0004F9 11r00r00         [12] 1157 	ld	de, #_state
-      0004FC CDrB2r00         [24] 1158 	call	_gbInitMap
-                                   1159 ;src/scene1.c:254: DISPLAY_ON;
-      0004FF F0r00            [12] 1160 	ldh	a, (_LCDC_REG + 0)
-      000501 F6 80            [ 8] 1161 	or	a, #0x80
-      000503 E0r00            [12] 1162 	ldh	(_LCDC_REG + 0), a
-                                   1163 ;src/scene1.c:255: SHOW_BKG;
-      000505 F0r00            [12] 1164 	ldh	a, (_LCDC_REG + 0)
-      000507 F6 01            [ 8] 1165 	or	a, #0x01
-      000509 E0r00            [12] 1166 	ldh	(_LCDC_REG + 0), a
-                                   1167 ;src/scene1.c:260: scene1_2_tileset
-                                   1168 ;src/scene1.c:258: 0, 
-      00050B 11r00r00         [12] 1169 	ld	de, #_scene1_2_tileset
-      00050E D5               [16] 1170 	push	de
-      00050F 21 00 74         [12] 1171 	ld	hl, #0x7400
-      000512 E5               [16] 1172 	push	hl
-      000513 CDr00r00         [24] 1173 	call	_set_bkg_data
-      000516 E8 04            [16] 1174 	add	sp, #4
-                                   1175 ;src/scene1.c:267: scene1_2_tilemap
-                                   1176 ;src/scene1.c:263: 0, 
-      000518 11r00r00         [12] 1177 	ld	de, #_scene1_2_tilemap
-      00051B D5               [16] 1178 	push	de
-      00051C 21 15 14         [12] 1179 	ld	hl, #0x1415
-      00051F E5               [16] 1180 	push	hl
-      000520 AF               [ 4] 1181 	xor	a, a
-      000521 0F               [ 4] 1182 	rrca
-      000522 F5               [16] 1183 	push	af
-      000523 CDr00r00         [24] 1184 	call	_set_bkg_tiles
-      000526 E8 06            [16] 1185 	add	sp, #6
-                                   1186 ;src/scene1.c:269: set_bkg_tile_xy(4, 3, scene1_2_tileset_size-2);
-      000528 21 03 72         [12] 1187 	ld	hl, #0x7203
-      00052B E5               [16] 1188 	push	hl
-      00052C 3E 04            [ 8] 1189 	ld	a, #0x04
-      00052E F5               [16] 1190 	push	af
-      00052F 33               [ 8] 1191 	inc	sp
-      000530 CDr00r00         [24] 1192 	call	_set_bkg_tile_xy
-      000533 E8 03            [16] 1193 	add	sp, #3
-                                   1194 ;src/scene1.c:271: BGP_REG = 0xFF;    
-      000535 3E FF            [ 8] 1195 	ld	a, #0xff
-      000537 E0r00            [12] 1196 	ldh	(_BGP_REG + 0), a
-                                   1197 ;src/scene1.c:272: delay(100);
-      000539 11 64 00         [12] 1198 	ld	de, #0x0064
-      00053C CDr00r00         [24] 1199 	call	_delay
-                                   1200 ;src/scene1.c:273: BGP_REG = 0xFE;
-      00053F 3E FE            [ 8] 1201 	ld	a, #0xfe
-      000541 E0r00            [12] 1202 	ldh	(_BGP_REG + 0), a
-                                   1203 ;src/scene1.c:274: delay(100);
-      000543 11 64 00         [12] 1204 	ld	de, #0x0064
-      000546 CDr00r00         [24] 1205 	call	_delay
-                                   1206 ;src/scene1.c:275: BGP_REG = 0xF9;
-      000549 3E F9            [ 8] 1207 	ld	a, #0xf9
-      00054B E0r00            [12] 1208 	ldh	(_BGP_REG + 0), a
-                                   1209 ;src/scene1.c:276: delay(100);
-      00054D 11 64 00         [12] 1210 	ld	de, #0x0064
-      000550 CDr00r00         [24] 1211 	call	_delay
-                                   1212 ;src/scene1.c:277: BGP_REG = 0xE4;
-      000553 3E E4            [ 8] 1213 	ld	a, #0xe4
-      000555 E0r00            [12] 1214 	ldh	(_BGP_REG + 0), a
-                                   1215 ;src/scene1.c:278: delay(100);
-      000557 11 64 00         [12] 1216 	ld	de, #0x0064
-                                   1217 ;src/scene1.c:288: }
-      00055A C3r00r00         [16] 1218 	jp	_delay
-                                   1219 ;src/scene1.c:290: void scene1Update()
-                                   1220 ;	---------------------------------
-                                   1221 ; Function scene1Update
-                                   1222 ; ---------------------------------
-      00055D                       1223 _scene1Update::
-                                   1224 ;src/scene1.c:292: while(1)
-      00055D                       1225 00102$:
-                                   1226 ;src/scene1.c:294: input = joypad();
-      00055D CDr00r00         [24] 1227 	call	_joypad
-      000560 EAr00r00         [16] 1228 	ld	(#_input),a
-                                   1229 ;src/scene1.c:296: wait_vbl_done();
-      000563 CDr00r00         [24] 1230 	call	_wait_vbl_done
-                                   1231 ;src/scene1.c:306: }
-      000566 18 F5            [12] 1232 	jr	00102$
-                                   1233 	.area _CODE
-                                   1234 	.area _INITIALIZER
-      000000                       1235 __xinit__input:
-      000000 FF                    1236 	.db #0xff	; 255
-      000001                       1237 __xinit__countdown:
-      000001 00                    1238 	.db #0x00	; 0
-      000002                       1239 __xinit__rng_val:
-      000002 00                    1240 	.db #0x00	; 0
-      000003                       1241 __xinit__max_time:
-      000003 14                    1242 	.db #0x14	; 20
-      000004                       1243 __xinit__start_time:
-      000004 00                    1244 	.db #0x00	; 0
-                                   1245 	.area _CABS (ABS)
+      00034C 00                     805 	.db 0x00
+                                    806 ;src/scene1.c:162: B8 gbFloodFill( P2 xy, 
+                                    807 ;	---------------------------------
+                                    808 ; Function gbFloodFill
+                                    809 ; ---------------------------------
+      00034D                        810 _gbFloodFill::
+      00034D E8 B6            [16]  811 	add	sp, #-74
+      00034F F8 49            [12]  812 	ldhl	sp,	#73
+      000351 32               [ 8]  813 	ld	(hl-), a
+      000352 73               [ 8]  814 	ld	(hl), e
+                                    815 ;src/scene1.c:172: point_queue.m_size      = 0;
+      000353 F8 40            [12]  816 	ldhl	sp,	#64
+      000355 36 00            [12]  817 	ld	(hl), #0x00
+                                    818 ;src/scene1.c:175: if (!gbPointInBounds(xy) || 
+      000357 F8 49            [12]  819 	ldhl	sp,	#73
+      000359 7E               [ 8]  820 	ld	a, (hl)
+      00035A CDr0Cr02         [24]  821 	call	_gbPointInBounds
+      00035D F8 47            [12]  822 	ldhl	sp,#71
+      00035F 77               [ 8]  823 	ld	(hl), a
+      000360 B7               [ 4]  824 	or	a, a
+      000361 28 1F            [12]  825 	jr	Z, 00101$
+                                    826 ;src/scene1.c:176: pState->m_map[xy] == color)
+      000363 F8 4C            [12]  827 	ldhl	sp,	#76
+      000365 7E               [ 8]  828 	ld	a, (hl)
+      000366 F8 42            [12]  829 	ldhl	sp,	#66
+      000368 77               [ 8]  830 	ld	(hl), a
+      000369 F8 4D            [12]  831 	ldhl	sp,	#77
+      00036B 7E               [ 8]  832 	ld	a, (hl)
+      00036C F8 43            [12]  833 	ldhl	sp,	#67
+      00036E 32               [ 8]  834 	ld	(hl-), a
+      00036F 2A               [ 8]  835 	ld	a, (hl+)
+      000370 5F               [ 4]  836 	ld	e, a
+      000371 56               [ 8]  837 	ld	d, (hl)
+      000372 F8 49            [12]  838 	ldhl	sp,	#73
+      000374 6E               [ 8]  839 	ld	l, (hl)
+      000375 26 00            [ 8]  840 	ld	h, #0x00
+      000377 19               [ 8]  841 	add	hl, de
+      000378 4D               [ 4]  842 	ld	c, l
+      000379 44               [ 4]  843 	ld	b, h
+      00037A 0A               [ 8]  844 	ld	a, (bc)
+      00037B F8 47            [12]  845 	ldhl	sp,	#71
+      00037D 22               [ 8]  846 	ld	(hl+), a
+      00037E 3A               [ 8]  847 	ld	a, (hl-)
+      00037F 96               [ 8]  848 	sub	a, (hl)
+      000380 20 04            [12]  849 	jr	NZ, 00102$
+      000382                        850 00101$:
+                                    851 ;src/scene1.c:177: return FALSE;
+      000382 AF               [ 4]  852 	xor	a, a
+      000383 C3r39r04         [16]  853 	jp	00109$
+      000386                        854 00102$:
+                                    855 ;src/scene1.c:180: start_color = pState->m_map[xy];
+      000386 F8 47            [12]  856 	ldhl	sp,	#71
+      000388 7E               [ 8]  857 	ld	a, (hl)
+      000389 F8 44            [12]  858 	ldhl	sp,	#68
+      00038B 77               [ 8]  859 	ld	(hl), a
+                                    860 ;src/scene1.c:183: gbQueuePush(xy, &point_queue);
+      00038C 21 00 00         [12]  861 	ld	hl, #0
+      00038F 39               [ 8]  862 	add	hl, sp
+      000390 5D               [ 4]  863 	ld	e, l
+      000391 54               [ 4]  864 	ld	d, h
+      000392 F8 49            [12]  865 	ldhl	sp,	#73
+      000394 7E               [ 8]  866 	ld	a, (hl)
+      000395 CDrF3r00         [24]  867 	call	_gbQueuePush
+                                    868 ;src/scene1.c:185: do
+      000398                        869 00106$:
+                                    870 ;src/scene1.c:188: gbQueuePop(&current_point, &point_queue);
+      000398 21 00 00         [12]  871 	ld	hl, #0
+      00039B 39               [ 8]  872 	add	hl, sp
+      00039C 4D               [ 4]  873 	ld	c, l
+      00039D 44               [ 4]  874 	ld	b, h
+      00039E F8 41            [12]  875 	ldhl	sp,	#65
+      0003A0 5D               [ 4]  876 	ld	e, l
+      0003A1 54               [ 4]  877 	ld	d, h
+      0003A2 CDr0Ar01         [24]  878 	call	_gbQueuePop
+                                    879 ;src/scene1.c:189: current_color = pState->m_map[current_point];
+      0003A5 F8 41            [12]  880 	ldhl	sp,	#65
+      0003A7 2A               [ 8]  881 	ld	a, (hl+)
+      0003A8 5F               [ 4]  882 	ld	e, a
+      0003A9 16 00            [ 8]  883 	ld	d, #0x00
+      0003AB 2A               [ 8]  884 	ld	a,	(hl+)
+      0003AC 66               [ 8]  885 	ld	h, (hl)
+      0003AD 6F               [ 4]  886 	ld	l, a
+      0003AE 19               [ 8]  887 	add	hl, de
+      0003AF E5               [16]  888 	push	hl
+      0003B0 7D               [ 4]  889 	ld	a, l
+      0003B1 F8 47            [12]  890 	ldhl	sp,	#71
+      0003B3 77               [ 8]  891 	ld	(hl), a
+      0003B4 E1               [12]  892 	pop	hl
+      0003B5 7C               [ 4]  893 	ld	a, h
+      0003B6 F8 46            [12]  894 	ldhl	sp,	#70
+      0003B8 32               [ 8]  895 	ld	(hl-), a
+      0003B9 2A               [ 8]  896 	ld	a, (hl+)
+      0003BA 5F               [ 4]  897 	ld	e, a
+      0003BB 2A               [ 8]  898 	ld	a, (hl+)
+      0003BC 57               [ 4]  899 	ld	d, a
+      0003BD 1A               [ 8]  900 	ld	a, (de)
+      0003BE 77               [ 8]  901 	ld	(hl), a
+                                    902 ;src/scene1.c:191: if (start_color != current_color)
+      0003BF F8 44            [12]  903 	ldhl	sp,	#68
+      0003C1 7E               [ 8]  904 	ld	a, (hl)
+      0003C2 F8 47            [12]  905 	ldhl	sp,	#71
+      0003C4 96               [ 8]  906 	sub	a, (hl)
+      0003C5 20 69            [12]  907 	jr	NZ, 00107$
+                                    908 ;src/scene1.c:195: pState->m_map[current_point] = color;
+      0003C7 F8 45            [12]  909 	ldhl	sp,#69
+      0003C9 2A               [ 8]  910 	ld	a, (hl+)
+      0003CA 5F               [ 4]  911 	ld	e, a
+      0003CB 2A               [ 8]  912 	ld	a, (hl+)
+      0003CC 23               [ 8]  913 	inc	hl
+      0003CD 57               [ 4]  914 	ld	d, a
+      0003CE 7E               [ 8]  915 	ld	a, (hl)
+      0003CF 12               [ 8]  916 	ld	(de), a
+                                    917 ;src/scene1.c:198: gbMapSampleNeighbor(current_point, GB_UP,      current_color, pState, &point_queue);
+      0003D0 21 00 00         [12]  918 	ld	hl, #0
+      0003D3 39               [ 8]  919 	add	hl, sp
+      0003D4 E5               [16]  920 	push	hl
+      0003D5 F8 44            [12]  921 	ldhl	sp,	#68
+      0003D7 2A               [ 8]  922 	ld	a, (hl+)
+      0003D8 5F               [ 4]  923 	ld	e, a
+      0003D9 56               [ 8]  924 	ld	d, (hl)
+      0003DA D5               [16]  925 	push	de
+      0003DB F8 4B            [12]  926 	ldhl	sp,	#75
+      0003DD 7E               [ 8]  927 	ld	a, (hl)
+      0003DE F5               [16]  928 	push	af
+      0003DF 33               [ 8]  929 	inc	sp
+      0003E0 1E 00            [ 8]  930 	ld	e, #0x00
+      0003E2 F8 46            [12]  931 	ldhl	sp,	#70
+      0003E4 7E               [ 8]  932 	ld	a, (hl)
+      0003E5 CDr71r02         [24]  933 	call	_gbMapSampleNeighbor
+                                    934 ;src/scene1.c:199: gbMapSampleNeighbor(current_point, GB_DOWN,    current_color, pState, &point_queue);
+      0003E8 21 00 00         [12]  935 	ld	hl, #0
+      0003EB 39               [ 8]  936 	add	hl, sp
+      0003EC E5               [16]  937 	push	hl
+      0003ED F8 44            [12]  938 	ldhl	sp,	#68
+      0003EF 2A               [ 8]  939 	ld	a, (hl+)
+      0003F0 5F               [ 4]  940 	ld	e, a
+      0003F1 56               [ 8]  941 	ld	d, (hl)
+      0003F2 D5               [16]  942 	push	de
+      0003F3 F8 4B            [12]  943 	ldhl	sp,	#75
+      0003F5 7E               [ 8]  944 	ld	a, (hl)
+      0003F6 F5               [16]  945 	push	af
+      0003F7 33               [ 8]  946 	inc	sp
+      0003F8 1E 01            [ 8]  947 	ld	e, #0x01
+      0003FA F8 46            [12]  948 	ldhl	sp,	#70
+      0003FC 7E               [ 8]  949 	ld	a, (hl)
+      0003FD CDr71r02         [24]  950 	call	_gbMapSampleNeighbor
+                                    951 ;src/scene1.c:200: gbMapSampleNeighbor(current_point, GB_LEFT,    current_color, pState, &point_queue);
+      000400 21 00 00         [12]  952 	ld	hl, #0
+      000403 39               [ 8]  953 	add	hl, sp
+      000404 E5               [16]  954 	push	hl
+      000405 F8 44            [12]  955 	ldhl	sp,	#68
+      000407 2A               [ 8]  956 	ld	a, (hl+)
+      000408 5F               [ 4]  957 	ld	e, a
+      000409 56               [ 8]  958 	ld	d, (hl)
+      00040A D5               [16]  959 	push	de
+      00040B F8 4B            [12]  960 	ldhl	sp,	#75
+      00040D 7E               [ 8]  961 	ld	a, (hl)
+      00040E F5               [16]  962 	push	af
+      00040F 33               [ 8]  963 	inc	sp
+      000410 1E 02            [ 8]  964 	ld	e, #0x02
+      000412 F8 46            [12]  965 	ldhl	sp,	#70
+      000414 7E               [ 8]  966 	ld	a, (hl)
+      000415 CDr71r02         [24]  967 	call	_gbMapSampleNeighbor
+                                    968 ;src/scene1.c:201: gbMapSampleNeighbor(current_point, GB_RIGHT,   current_color, pState, &point_queue);
+      000418 21 00 00         [12]  969 	ld	hl, #0
+      00041B 39               [ 8]  970 	add	hl, sp
+      00041C E5               [16]  971 	push	hl
+      00041D F8 44            [12]  972 	ldhl	sp,	#68
+      00041F 2A               [ 8]  973 	ld	a, (hl+)
+      000420 5F               [ 4]  974 	ld	e, a
+      000421 56               [ 8]  975 	ld	d, (hl)
+      000422 D5               [16]  976 	push	de
+      000423 F8 4B            [12]  977 	ldhl	sp,	#75
+      000425 7E               [ 8]  978 	ld	a, (hl)
+      000426 F5               [16]  979 	push	af
+      000427 33               [ 8]  980 	inc	sp
+      000428 1E 03            [ 8]  981 	ld	e, #0x03
+      00042A F8 46            [12]  982 	ldhl	sp,	#70
+      00042C 7E               [ 8]  983 	ld	a, (hl)
+      00042D CDr71r02         [24]  984 	call	_gbMapSampleNeighbor
+      000430                        985 00107$:
+                                    986 ;src/scene1.c:203: while (point_queue.m_size != 0);
+      000430 F8 40            [12]  987 	ldhl	sp,	#64
+      000432 7E               [ 8]  988 	ld	a, (hl)
+      000433 B7               [ 4]  989 	or	a, a
+      000434 C2r98r03         [16]  990 	jp	NZ, 00106$
+                                    991 ;src/scene1.c:205: return TRUE;
+      000437 3E 01            [ 8]  992 	ld	a, #0x01
+      000439                        993 00109$:
+                                    994 ;src/scene1.c:206: }
+      000439 E8 4A            [16]  995 	add	sp, #74
+      00043B E1               [12]  996 	pop	hl
+      00043C C1               [12]  997 	pop	bc
+      00043D E9               [ 4]  998 	jp	(hl)
+                                    999 ;src/scene1.c:220: void scene1PrintMap(Scene1_State *pState)
+                                   1000 ;	---------------------------------
+                                   1001 ; Function scene1PrintMap
+                                   1002 ; ---------------------------------
+      00043E                       1003 _scene1PrintMap::
+      00043E 3B               [ 8] 1004 	dec	sp
+      00043F 3B               [ 8] 1005 	dec	sp
+                                   1006 ;src/scene1.c:223: GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+      000440 F8 01            [12] 1007 	ldhl	sp,	#1
+      000442 36 00            [12] 1008 	ld	(hl), #0x00
+      000444                       1009 00108$:
+      000444 F8 01            [12] 1010 	ldhl	sp,	#1
+      000446 3A               [ 8] 1011 	ld	a, (hl-)
+      000447 E6 07            [ 8] 1012 	and	a, #0x07
+      000449 22               [ 8] 1013 	ld	(hl+), a
+      00044A 3A               [ 8] 1014 	ld	a, (hl-)
+      00044B 4F               [ 4] 1015 	ld	c, a
+      00044C CB 39            [ 8] 1016 	srl	c
+      00044E CB 39            [ 8] 1017 	srl	c
+      000450 CB 39            [ 8] 1018 	srl	c
+      000452 7E               [ 8] 1019 	ld	a, (hl)
+      000453 D6 06            [ 8] 1020 	sub	a, #0x06
+      000455 30 3C            [12] 1021 	jr	NC, 00106$
+      000457 79               [ 4] 1022 	ld	a, c
+      000458 D6 08            [ 8] 1023 	sub	a, #0x08
+      00045A 30 37            [12] 1024 	jr	NC, 00106$
+      00045C 23               [ 8] 1025 	inc	hl
+      00045D D5               [16] 1026 	push	de
+      00045E 6E               [ 8] 1027 	ld	l, (hl)
+      00045F 26 00            [ 8] 1028 	ld	h, #0x00
+      000461 19               [ 8] 1029 	add	hl, de
+      000462 D1               [12] 1030 	pop	de
+      000463 4D               [ 4] 1031 	ld	c, l
+      000464 44               [ 4] 1032 	ld	b, h
+      000465 0A               [ 8] 1033 	ld	a, (bc)
+      000466 4F               [ 4] 1034 	ld	c, a
+      000467 06 00            [ 8] 1035 	ld	b, #0x00
+      000469 D5               [16] 1036 	push	de
+      00046A C5               [16] 1037 	push	bc
+      00046B 01r9Er04         [12] 1038 	ld	bc, #___str_3
+      00046E C5               [16] 1039 	push	bc
+      00046F CDr00r00         [24] 1040 	call	_printf
+      000472 E8 04            [16] 1041 	add	sp, #4
+      000474 D1               [12] 1042 	pop	de
+      000475 F8 00            [12] 1043 	ldhl	sp,	#0
+      000477 6E               [ 8] 1044 	ld	l, (hl)
+                                   1045 ;	spillPairReg hl
+                                   1046 ;	spillPairReg hl
+      000478 26 00            [ 8] 1047 	ld	h, #0x00
+                                   1048 ;	spillPairReg hl
+                                   1049 ;	spillPairReg hl
+      00047A 23               [ 8] 1050 	inc	hl
+      00047B D5               [16] 1051 	push	de
+      00047C 01 06 00         [12] 1052 	ld	bc, #0x0006
+      00047F 5D               [ 4] 1053 	ld	e, l
+      000480 54               [ 4] 1054 	ld	d, h
+      000481 CDr00r00         [24] 1055 	call	__modsint
+      000484 D1               [12] 1056 	pop	de
+      000485 78               [ 4] 1057 	ld	a, b
+      000486 B1               [ 4] 1058 	or	a, c
+      000487 20 0A            [12] 1059 	jr	NZ, 00106$
+      000489 D5               [16] 1060 	push	de
+      00048A 3E 0A            [ 8] 1061 	ld	a, #0x0a
+      00048C F5               [16] 1062 	push	af
+      00048D 33               [ 8] 1063 	inc	sp
+      00048E CDr00r00         [24] 1064 	call	_putchar
+      000491 33               [ 8] 1065 	inc	sp
+      000492 D1               [12] 1066 	pop	de
+      000493                       1067 00106$:
+      000493 F8 01            [12] 1068 	ldhl	sp,	#1
+      000495 34               [12] 1069 	inc	(hl)
+      000496 7E               [ 8] 1070 	ld	a, (hl)
+      000497 D6 40            [ 8] 1071 	sub	a, #0x40
+      000499 38 A9            [12] 1072 	jr	C, 00108$
+                                   1073 ;src/scene1.c:228: }
+      00049B 33               [ 8] 1074 	inc	sp
+      00049C 33               [ 8] 1075 	inc	sp
+      00049D C9               [16] 1076 	ret
+      00049E                       1077 ___str_3:
+      00049E 25 64 20              1078 	.ascii "%d "
+      0004A1 00                    1079 	.db 0x00
+                                   1080 ;src/scene1.c:230: void scene1InitMap(Scene1_State *pState)
+                                   1081 ;	---------------------------------
+                                   1082 ; Function scene1InitMap
+                                   1083 ; ---------------------------------
+      0004A2                       1084 _scene1InitMap::
+      0004A2 E8 C0            [16] 1085 	add	sp, #-64
+      0004A4 4B               [ 4] 1086 	ld	c, e
+      0004A5 42               [ 4] 1087 	ld	b, d
+                                   1088 ;src/scene1.c:232: const U8 COCK_RING[] = 
+      0004A6 F8 00            [12] 1089 	ldhl	sp,	#0
+      0004A8 3E 01            [ 8] 1090 	ld	a,#0x01
+      0004AA 22               [ 8] 1091 	ld	(hl+),a
+      0004AB 22               [ 8] 1092 	ld	(hl+), a
+      0004AC AF               [ 4] 1093 	xor	a, a
+      0004AD 22               [ 8] 1094 	ld	(hl+), a
+      0004AE AF               [ 4] 1095 	xor	a, a
+      0004AF 22               [ 8] 1096 	ld	(hl+), a
+      0004B0 AF               [ 4] 1097 	xor	a, a
+      0004B1 22               [ 8] 1098 	ld	(hl+), a
+      0004B2 AF               [ 4] 1099 	xor	a, a
+      0004B3 22               [ 8] 1100 	ld	(hl+), a
+      0004B4 AF               [ 4] 1101 	xor	a, a
+      0004B5 22               [ 8] 1102 	ld	(hl+), a
+      0004B6 AF               [ 4] 1103 	xor	a, a
+      0004B7 22               [ 8] 1104 	ld	(hl+), a
+      0004B8 3E 01            [ 8] 1105 	ld	a,#0x01
+      0004BA 22               [ 8] 1106 	ld	(hl+),a
+      0004BB 22               [ 8] 1107 	ld	(hl+), a
+      0004BC 3E 01            [ 8] 1108 	ld	a,#0x01
+      0004BE 22               [ 8] 1109 	ld	(hl+),a
+      0004BF 22               [ 8] 1110 	ld	(hl+), a
+      0004C0 AF               [ 4] 1111 	xor	a, a
+      0004C1 22               [ 8] 1112 	ld	(hl+), a
+      0004C2 AF               [ 4] 1113 	xor	a, a
+      0004C3 22               [ 8] 1114 	ld	(hl+), a
+      0004C4 AF               [ 4] 1115 	xor	a, a
+      0004C5 22               [ 8] 1116 	ld	(hl+), a
+      0004C6 AF               [ 4] 1117 	xor	a, a
+      0004C7 22               [ 8] 1118 	ld	(hl+), a
+      0004C8 3E 01            [ 8] 1119 	ld	a,#0x01
+      0004CA 22               [ 8] 1120 	ld	(hl+),a
+      0004CB 22               [ 8] 1121 	ld	(hl+), a
+      0004CC 3E 01            [ 8] 1122 	ld	a,#0x01
+      0004CE 22               [ 8] 1123 	ld	(hl+),a
+      0004CF 22               [ 8] 1124 	ld	(hl+), a
+      0004D0 AF               [ 4] 1125 	xor	a, a
+      0004D1 22               [ 8] 1126 	ld	(hl+), a
+      0004D2 AF               [ 4] 1127 	xor	a, a
+      0004D3 22               [ 8] 1128 	ld	(hl+), a
+      0004D4 AF               [ 4] 1129 	xor	a, a
+      0004D5 22               [ 8] 1130 	ld	(hl+), a
+      0004D6 AF               [ 4] 1131 	xor	a, a
+      0004D7 22               [ 8] 1132 	ld	(hl+), a
+      0004D8 AF               [ 4] 1133 	xor	a, a
+      0004D9 22               [ 8] 1134 	ld	(hl+), a
+      0004DA AF               [ 4] 1135 	xor	a, a
+      0004DB 22               [ 8] 1136 	ld	(hl+), a
+      0004DC AF               [ 4] 1137 	xor	a, a
+      0004DD 22               [ 8] 1138 	ld	(hl+), a
+      0004DE AF               [ 4] 1139 	xor	a, a
+      0004DF 22               [ 8] 1140 	ld	(hl+), a
+      0004E0 AF               [ 4] 1141 	xor	a, a
+      0004E1 22               [ 8] 1142 	ld	(hl+), a
+      0004E2 AF               [ 4] 1143 	xor	a, a
+      0004E3 22               [ 8] 1144 	ld	(hl+), a
+      0004E4 AF               [ 4] 1145 	xor	a, a
+      0004E5 22               [ 8] 1146 	ld	(hl+), a
+      0004E6 AF               [ 4] 1147 	xor	a, a
+      0004E7 22               [ 8] 1148 	ld	(hl+), a
+      0004E8 AF               [ 4] 1149 	xor	a, a
+      0004E9 22               [ 8] 1150 	ld	(hl+), a
+      0004EA AF               [ 4] 1151 	xor	a, a
+      0004EB 22               [ 8] 1152 	ld	(hl+), a
+      0004EC AF               [ 4] 1153 	xor	a, a
+      0004ED 22               [ 8] 1154 	ld	(hl+), a
+      0004EE 3E 01            [ 8] 1155 	ld	a,#0x01
+      0004F0 22               [ 8] 1156 	ld	(hl+),a
+      0004F1 22               [ 8] 1157 	ld	(hl+), a
+      0004F2 AF               [ 4] 1158 	xor	a, a
+      0004F3 22               [ 8] 1159 	ld	(hl+), a
+      0004F4 AF               [ 4] 1160 	xor	a, a
+      0004F5 22               [ 8] 1161 	ld	(hl+), a
+      0004F6 AF               [ 4] 1162 	xor	a, a
+      0004F7 22               [ 8] 1163 	ld	(hl+), a
+      0004F8 AF               [ 4] 1164 	xor	a, a
+      0004F9 22               [ 8] 1165 	ld	(hl+), a
+      0004FA AF               [ 4] 1166 	xor	a, a
+      0004FB 22               [ 8] 1167 	ld	(hl+), a
+      0004FC AF               [ 4] 1168 	xor	a, a
+      0004FD 22               [ 8] 1169 	ld	(hl+), a
+      0004FE 3E 01            [ 8] 1170 	ld	a,#0x01
+      000500 22               [ 8] 1171 	ld	(hl+),a
+      000501 22               [ 8] 1172 	ld	(hl+), a
+      000502 AF               [ 4] 1173 	xor	a, a
+      000503 22               [ 8] 1174 	ld	(hl+), a
+      000504 AF               [ 4] 1175 	xor	a, a
+      000505 22               [ 8] 1176 	ld	(hl+), a
+      000506 AF               [ 4] 1177 	xor	a, a
+      000507 22               [ 8] 1178 	ld	(hl+), a
+      000508 AF               [ 4] 1179 	xor	a, a
+      000509 22               [ 8] 1180 	ld	(hl+), a
+      00050A AF               [ 4] 1181 	xor	a, a
+      00050B 22               [ 8] 1182 	ld	(hl+), a
+      00050C AF               [ 4] 1183 	xor	a, a
+      00050D 22               [ 8] 1184 	ld	(hl+), a
+      00050E AF               [ 4] 1185 	xor	a, a
+      00050F 22               [ 8] 1186 	ld	(hl+), a
+      000510 AF               [ 4] 1187 	xor	a, a
+      000511 22               [ 8] 1188 	ld	(hl+), a
+      000512 AF               [ 4] 1189 	xor	a, a
+      000513 22               [ 8] 1190 	ld	(hl+), a
+      000514 AF               [ 4] 1191 	xor	a, a
+      000515 22               [ 8] 1192 	ld	(hl+), a
+      000516 AF               [ 4] 1193 	xor	a, a
+      000517 22               [ 8] 1194 	ld	(hl+), a
+      000518 AF               [ 4] 1195 	xor	a, a
+      000519 22               [ 8] 1196 	ld	(hl+), a
+      00051A AF               [ 4] 1197 	xor	a, a
+      00051B 22               [ 8] 1198 	ld	(hl+), a
+      00051C AF               [ 4] 1199 	xor	a, a
+      00051D 22               [ 8] 1200 	ld	(hl+), a
+      00051E AF               [ 4] 1201 	xor	a, a
+      00051F 22               [ 8] 1202 	ld	(hl+), a
+      000520 AF               [ 4] 1203 	xor	a, a
+      000521 22               [ 8] 1204 	ld	(hl+), a
+      000522 AF               [ 4] 1205 	xor	a, a
+      000523 22               [ 8] 1206 	ld	(hl+), a
+      000524 AF               [ 4] 1207 	xor	a, a
+      000525 22               [ 8] 1208 	ld	(hl+), a
+      000526 77               [ 8] 1209 	ld	(hl), a
+                                   1210 ;src/scene1.c:244: memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
+      000527 21 00 00         [12] 1211 	ld	hl, #0
+      00052A 39               [ 8] 1212 	add	hl, sp
+      00052B 59               [ 4] 1213 	ld	e, c
+      00052C 50               [ 4] 1214 	ld	d, b
+      00052D 01 40 00         [12] 1215 	ld	bc, #0x0040
+      000530 C5               [16] 1216 	push	bc
+      000531 4D               [ 4] 1217 	ld	c, l
+      000532 44               [ 4] 1218 	ld	b, h
+      000533 CDr32r00         [24] 1219 	call	_memcpy
+                                   1220 ;src/scene1.c:249: }
+      000536 E8 40            [16] 1221 	add	sp, #64
+      000538 C9               [16] 1222 	ret
+                                   1223 ;src/scene1.c:251: void scene1InitBG()
+                                   1224 ;	---------------------------------
+                                   1225 ; Function scene1InitBG
+                                   1226 ; ---------------------------------
+      000539                       1227 _scene1InitBG::
+                                   1228 ;src/scene1.c:257: scene1_2_tileset
+                                   1229 ;src/scene1.c:255: 0, 
+      000539 11r00r00         [12] 1230 	ld	de, #_scene1_2_tileset
+      00053C D5               [16] 1231 	push	de
+      00053D 21 00 6E         [12] 1232 	ld	hl, #0x6e00
+      000540 E5               [16] 1233 	push	hl
+      000541 CDr00r00         [24] 1234 	call	_set_bkg_data
+      000544 E8 04            [16] 1235 	add	sp, #4
+                                   1236 ;src/scene1.c:265: scene1_2_tilemap
+                                   1237 ;src/scene1.c:261: 0, 
+      000546 11r00r00         [12] 1238 	ld	de, #_scene1_2_tilemap
+      000549 D5               [16] 1239 	push	de
+      00054A 21 14 13         [12] 1240 	ld	hl, #0x1314
+      00054D E5               [16] 1241 	push	hl
+      00054E AF               [ 4] 1242 	xor	a, a
+      00054F 0F               [ 4] 1243 	rrca
+      000550 F5               [16] 1244 	push	af
+      000551 CDr00r00         [24] 1245 	call	_set_bkg_tiles
+      000554 E8 06            [16] 1246 	add	sp, #6
+                                   1247 ;src/scene1.c:268: set_bkg_tile_xy(4, 3, scene1_2_tileset_size-2);
+      000556 21 03 6C         [12] 1248 	ld	hl, #0x6c03
+      000559 E5               [16] 1249 	push	hl
+      00055A 3E 04            [ 8] 1250 	ld	a, #0x04
+      00055C F5               [16] 1251 	push	af
+      00055D 33               [ 8] 1252 	inc	sp
+      00055E CDr00r00         [24] 1253 	call	_set_bkg_tile_xy
+      000561 E8 03            [16] 1254 	add	sp, #3
+                                   1255 ;src/scene1.c:271: gbFadeIn();
+                                   1256 ;src/scene1.c:272: }
+      000563 C3rA3r00         [16] 1257 	jp	_gbFadeIn
+                                   1258 ;src/scene1.c:274: void scene1InitCounter()
+                                   1259 ;	---------------------------------
+                                   1260 ; Function scene1InitCounter
+                                   1261 ; ---------------------------------
+      000566                       1262 _scene1InitCounter::
+                                   1263 ;src/scene1.c:276: set_bkg_tile_xy(16, 3, number_start_index + (max_time / 10));
+      000566 21r03r00         [12] 1264 	ld	hl, #_max_time
+      000569 5E               [ 8] 1265 	ld	e, (hl)
+      00056A 16 00            [ 8] 1266 	ld	d, #0x00
+      00056C 01 0A 00         [12] 1267 	ld	bc, #0x000a
+      00056F CDr00r00         [24] 1268 	call	__divsint
+      000572 79               [ 4] 1269 	ld	a, c
+      000573 C6 64            [ 8] 1270 	add	a, #0x64
+      000575 67               [ 4] 1271 	ld	h, a
+      000576 2E 03            [ 8] 1272 	ld	l, #0x03
+      000578 E5               [16] 1273 	push	hl
+      000579 3E 10            [ 8] 1274 	ld	a, #0x10
+      00057B F5               [16] 1275 	push	af
+      00057C 33               [ 8] 1276 	inc	sp
+      00057D CDr00r00         [24] 1277 	call	_set_bkg_tile_xy
+      000580 E8 03            [16] 1278 	add	sp, #3
+                                   1279 ;src/scene1.c:277: set_bkg_tile_xy(17, 3, number_start_index + (max_time % 10));
+      000582 21r03r00         [12] 1280 	ld	hl, #_max_time
+      000585 5E               [ 8] 1281 	ld	e, (hl)
+      000586 16 00            [ 8] 1282 	ld	d, #0x00
+      000588 01 0A 00         [12] 1283 	ld	bc, #0x000a
+      00058B CDr00r00         [24] 1284 	call	__modsint
+      00058E 79               [ 4] 1285 	ld	a, c
+      00058F C6 64            [ 8] 1286 	add	a, #0x64
+      000591 67               [ 4] 1287 	ld	h, a
+      000592 2E 03            [ 8] 1288 	ld	l, #0x03
+      000594 E5               [16] 1289 	push	hl
+      000595 3E 11            [ 8] 1290 	ld	a, #0x11
+      000597 F5               [16] 1291 	push	af
+      000598 33               [ 8] 1292 	inc	sp
+      000599 CDr00r00         [24] 1293 	call	_set_bkg_tile_xy
+      00059C E8 03            [16] 1294 	add	sp, #3
+                                   1295 ;src/scene1.c:278: }
+      00059E C9               [16] 1296 	ret
+                                   1297 ;src/scene1.c:281: B8 scene1UpdateCountdown()
+                                   1298 ;	---------------------------------
+                                   1299 ; Function scene1UpdateCountdown
+                                   1300 ; ---------------------------------
+      00059F                       1301 _scene1UpdateCountdown::
+      00059F 3B               [ 8] 1302 	dec	sp
+      0005A0 3B               [ 8] 1303 	dec	sp
+                                   1304 ;src/scene1.c:283: U8  old_countdown   = countdown;
+      0005A1 21r01r00         [12] 1305 	ld	hl, #_countdown
+      0005A4 4E               [ 8] 1306 	ld	c, (hl)
+                                   1307 ;src/scene1.c:284: countdown = gbCountdownSeconds(max_time, start_time);
+      0005A5 C5               [16] 1308 	push	bc
+      0005A6 21r04r00         [12] 1309 	ld	hl, #_start_time
+      0005A9 5E               [ 8] 1310 	ld	e, (hl)
+      0005AA FAr03r00         [16] 1311 	ld	a, (#_max_time)
+      0005AD CDr83r00         [24] 1312 	call	_gbCountdownSeconds
+      0005B0 C1               [12] 1313 	pop	bc
+                                   1314 ;src/scene1.c:287: if (old_countdown - countdown > 0)
+      0005B1 EAr01r00         [16] 1315 	ld	(#_countdown),a
+      0005B4 06 00            [ 8] 1316 	ld	b, #0x00
+      0005B6 F8 00            [12] 1317 	ldhl	sp,	#0
+      0005B8 22               [ 8] 1318 	ld	(hl+), a
+      0005B9 36 00            [12] 1319 	ld	(hl), #0x00
+      0005BB D1               [12] 1320 	pop	de
+      0005BC D5               [16] 1321 	push	de
+      0005BD 79               [ 4] 1322 	ld	a, c
+      0005BE 93               [ 4] 1323 	sub	a, e
+      0005BF 5F               [ 4] 1324 	ld	e, a
+      0005C0 78               [ 4] 1325 	ld	a, b
+      0005C1 9A               [ 4] 1326 	sbc	a, d
+      0005C2 47               [ 4] 1327 	ld	b, a
+      0005C3 4B               [ 4] 1328 	ld	c, e
+      0005C4 58               [ 4] 1329 	ld	e, b
+      0005C5 AF               [ 4] 1330 	xor	a, a
+      0005C6 57               [ 4] 1331 	ld	d, a
+      0005C7 B9               [ 4] 1332 	cp	a, c
+      0005C8 98               [ 4] 1333 	sbc	a, b
+      0005C9 CB 7B            [ 8] 1334 	bit	7, e
+      0005CB 28 07            [12] 1335 	jr	Z, 00112$
+      0005CD CB 7A            [ 8] 1336 	bit	7, d
+      0005CF 20 08            [12] 1337 	jr	NZ, 00113$
+      0005D1 BF               [ 4] 1338 	cp	a, a
+      0005D2 18 05            [12] 1339 	jr	00113$
+      0005D4                       1340 00112$:
+      0005D4 CB 7A            [ 8] 1341 	bit	7, d
+      0005D6 28 01            [12] 1342 	jr	Z, 00113$
+      0005D8 37               [ 4] 1343 	scf
+      0005D9                       1344 00113$:
+      0005D9 30 34            [12] 1345 	jr	NC, 00102$
+                                   1346 ;src/scene1.c:289: set_bkg_tile_xy(16, 3, number_start_index + (countdown / 10));
+      0005DB 01 0A 00         [12] 1347 	ld	bc, #0x000a
+      0005DE D1               [12] 1348 	pop	de
+      0005DF D5               [16] 1349 	push	de
+      0005E0 CDr00r00         [24] 1350 	call	__divsint
+      0005E3 79               [ 4] 1351 	ld	a, c
+      0005E4 C6 64            [ 8] 1352 	add	a, #0x64
+      0005E6 67               [ 4] 1353 	ld	h, a
+      0005E7 2E 03            [ 8] 1354 	ld	l, #0x03
+      0005E9 E5               [16] 1355 	push	hl
+      0005EA 3E 10            [ 8] 1356 	ld	a, #0x10
+      0005EC F5               [16] 1357 	push	af
+      0005ED 33               [ 8] 1358 	inc	sp
+      0005EE CDr00r00         [24] 1359 	call	_set_bkg_tile_xy
+      0005F1 E8 03            [16] 1360 	add	sp, #3
+                                   1361 ;src/scene1.c:290: set_bkg_tile_xy(17, 3, number_start_index + (countdown % 10));
+      0005F3 21r01r00         [12] 1362 	ld	hl, #_countdown
+      0005F6 5E               [ 8] 1363 	ld	e, (hl)
+      0005F7 16 00            [ 8] 1364 	ld	d, #0x00
+      0005F9 01 0A 00         [12] 1365 	ld	bc, #0x000a
+      0005FC CDr00r00         [24] 1366 	call	__modsint
+      0005FF 79               [ 4] 1367 	ld	a, c
+      000600 C6 64            [ 8] 1368 	add	a, #0x64
+      000602 67               [ 4] 1369 	ld	h, a
+      000603 2E 03            [ 8] 1370 	ld	l, #0x03
+      000605 E5               [16] 1371 	push	hl
+      000606 3E 11            [ 8] 1372 	ld	a, #0x11
+      000608 F5               [16] 1373 	push	af
+      000609 33               [ 8] 1374 	inc	sp
+      00060A CDr00r00         [24] 1375 	call	_set_bkg_tile_xy
+      00060D E8 03            [16] 1376 	add	sp, #3
+      00060F                       1377 00102$:
+                                   1378 ;src/scene1.c:292: return (countdown == 0);
+      00060F FAr01r00         [16] 1379 	ld	a, (#_countdown)
+      000612 B7               [ 4] 1380 	or	a, a
+      000613 3E 01            [ 8] 1381 	ld	a, #0x01
+      000615 28 01            [12] 1382 	jr	Z, 00115$
+      000617 AF               [ 4] 1383 	xor	a, a
+      000618                       1384 00115$:
+                                   1385 ;src/scene1.c:293: }
+      000618 33               [ 8] 1386 	inc	sp
+      000619 33               [ 8] 1387 	inc	sp
+      00061A C9               [16] 1388 	ret
+                                   1389 ;src/scene1.c:295: void scene1UpdatePlayerActions()
+                                   1390 ;	---------------------------------
+                                   1391 ; Function scene1UpdatePlayerActions
+                                   1392 ; ---------------------------------
+      00061B                       1393 _scene1UpdatePlayerActions::
+                                   1394 ;src/scene1.c:298: }
+      00061B C9               [16] 1395 	ret
+                                   1396 ;src/scene1.c:300: void scene1UpdateCursor()
+                                   1397 ;	---------------------------------
+                                   1398 ; Function scene1UpdateCursor
+                                   1399 ; ---------------------------------
+      00061C                       1400 _scene1UpdateCursor::
+                                   1401 ;src/scene1.c:303: }
+      00061C C9               [16] 1402 	ret
+                                   1403 ;src/scene1.c:305: void scene1Start()
+                                   1404 ;	---------------------------------
+                                   1405 ; Function scene1Start
+                                   1406 ; ---------------------------------
+      00061D                       1407 _scene1Start::
+                                   1408 ;src/scene1.c:308: DISPLAY_ON;
+      00061D F0r00            [12] 1409 	ldh	a, (_LCDC_REG + 0)
+      00061F F6 80            [ 8] 1410 	or	a, #0x80
+      000621 E0r00            [12] 1411 	ldh	(_LCDC_REG + 0), a
+                                   1412 ;src/scene1.c:309: SHOW_BKG;
+      000623 F0r00            [12] 1413 	ldh	a, (_LCDC_REG + 0)
+      000625 F6 01            [ 8] 1414 	or	a, #0x01
+      000627 E0r00            [12] 1415 	ldh	(_LCDC_REG + 0), a
+                                   1416 ;src/scene1.c:312: scene1InitBG();
+      000629 CDr39r05         [24] 1417 	call	_scene1InitBG
+                                   1418 ;src/scene1.c:313: scene1InitCounter();
+      00062C CDr66r05         [24] 1419 	call	_scene1InitCounter
+                                   1420 ;src/scene1.c:316: initrand(start_time);
+      00062F 21r04r00         [12] 1421 	ld	hl, #_start_time
+      000632 4E               [ 8] 1422 	ld	c, (hl)
+      000633 06 00            [ 8] 1423 	ld	b, #0x00
+      000635 C5               [16] 1424 	push	bc
+      000636 CDr00r00         [24] 1425 	call	_initrand
+      000639 E1               [12] 1426 	pop	hl
+                                   1427 ;src/scene1.c:317: start_time = time(NULL);
+      00063A 11 00 00         [12] 1428 	ld	de, #0x0000
+      00063D CDr00r00         [24] 1429 	call	_time
+      000640 21r04r00         [12] 1430 	ld	hl, #_start_time
+      000643 71               [ 8] 1431 	ld	(hl), c
+                                   1432 ;src/scene1.c:318: scene1InitMap(&state);
+      000644 11r00r00         [12] 1433 	ld	de, #_state
+                                   1434 ;src/scene1.c:328: }
+      000647 C3rA2r04         [16] 1435 	jp	_scene1InitMap
+                                   1436 ;src/scene1.c:330: void scene1End()
+                                   1437 ;	---------------------------------
+                                   1438 ; Function scene1End
+                                   1439 ; ---------------------------------
+      00064A                       1440 _scene1End::
+                                   1441 ;src/scene1.c:332: gbFadeOut();
+                                   1442 ;src/scene1.c:333: }
+      00064A C3rCBr00         [16] 1443 	jp	_gbFadeOut
+                                   1444 ;src/scene1.c:335: void scene1Update()
+                                   1445 ;	---------------------------------
+                                   1446 ; Function scene1Update
+                                   1447 ; ---------------------------------
+      00064D                       1448 _scene1Update::
+                                   1449 ;src/scene1.c:337: while(1)
+      00064D                       1450 00104$:
+                                   1451 ;src/scene1.c:340: input = joypad();
+      00064D CDr00r00         [24] 1452 	call	_joypad
+      000650 EAr00r00         [16] 1453 	ld	(#_input),a
+                                   1454 ;src/scene1.c:343: if (scene1UpdateCountdown() == TRUE)
+      000653 CDr9Fr05         [24] 1455 	call	_scene1UpdateCountdown
+      000656 3D               [ 4] 1456 	dec	a
+      000657 CAr4Ar06         [16] 1457 	jp	Z,_scene1End
+                                   1458 ;src/scene1.c:347: scene1UpdateCursor();
+      00065A CDr1Cr06         [24] 1459 	call	_scene1UpdateCursor
+                                   1460 ;src/scene1.c:350: scene1UpdatePlayerActions();
+      00065D CDr1Br06         [24] 1461 	call	_scene1UpdatePlayerActions
+                                   1462 ;src/scene1.c:353: wait_vbl_done();
+      000660 CDr00r00         [24] 1463 	call	_wait_vbl_done
+                                   1464 ;src/scene1.c:364: scene1End();
+                                   1465 ;src/scene1.c:365: }
+      000663 18 E8            [12] 1466 	jr	00104$
+                                   1467 	.area _CODE
+                                   1468 	.area _INITIALIZER
+      000000                       1469 __xinit__input:
+      000000 FF                    1470 	.db #0xff	; 255
+      000001                       1471 __xinit__countdown:
+      000001 00                    1472 	.db #0x00	; 0
+      000002                       1473 __xinit__rng_val:
+      000002 00                    1474 	.db #0x00	; 0
+      000003                       1475 __xinit__max_time:
+      000003 0A                    1476 	.db #0x0a	; 10
+      000004                       1477 __xinit__start_time:
+      000004 00                    1478 	.db #0x00	; 0
+                                   1479 	.area _CABS (ABS)

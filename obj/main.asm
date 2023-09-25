@@ -9,10 +9,8 @@
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _main
-	.globl _gbCountdownSeconds
 	.globl _scene1Update
 	.globl _scene1Start
-	.globl _time
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -175,47 +173,15 @@ _memcpy:
 	pop	hl
 	pop	af
 	jp	(hl)
-;src/main.c:11: U8 gbCountdownSeconds(U8 max_time, U8 start_time)
-;	---------------------------------
-; Function gbCountdownSeconds
-; ---------------------------------
-_gbCountdownSeconds::
-	ld	l, a
-;	spillPairReg hl
-;	spillPairReg hl
-;src/main.c:13: return max_time - ((time(NULL)-start_time) % (max_time+1));
-	push	hl
-	push	de
-	ld	de, #0x0000
-	call	_time
-	pop	de
-	pop	hl
-	ld	a, c
-	ld	d, #0x00
-	sub	a, e
-	ld	e, a
-	ld	a, b
-	sbc	a, d
-	ld	d, a
-	ld	c, l
-	ld	b, #0x00
-	inc	bc
-	push	hl
-	call	__moduint
-	pop	hl
-	ld	a, l
-	sub	a, c
-;src/main.c:14: }
-	ret
-;src/main.c:16: void main()
+;src/main.c:11: void main()
 ;	---------------------------------
 ; Function main
 ; ---------------------------------
 _main::
-;src/main.c:18: scene1Start();
+;src/main.c:13: scene1Start();
 	call	_scene1Start
-;src/main.c:19: scene1Update();
-;src/main.c:20: }
+;src/main.c:14: scene1Update();
+;src/main.c:15: }
 	jp	_scene1Update
 	.area _CODE
 	.area _INITIALIZER

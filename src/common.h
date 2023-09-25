@@ -2,6 +2,14 @@
 #define COMMON_H
 
 #include <gb/gb.h>
+#include <time.h>
+#include "defs.h"
+
+U8 gbCountdownSeconds(U8 max_time, U8 start_time)
+{
+    return max_time - ((time(NULL)-start_time) % (max_time+1));
+}
+
 
 // Taken from https://alfaexploit.com/en/posts/gameboy_dev06/
 void gbFadeIn()

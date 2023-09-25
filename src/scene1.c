@@ -1,4 +1,5 @@
 #include "scene1.h"
+#include "common.h"
 
 
 #define BOX_W 6
@@ -51,37 +52,6 @@ typedef struct {
 #define GB_FUNCTION_BODY(...) __VA_ARGS__
 #define END_OF_ROW(x) (((x+1) % BOX_W) == 0)
 #define NOT_END_OF_ROW(x) (((x+1) % BOX_W) != 0)
-
-void gbInitMap(Scene1_State *pState)
-{    
-    const U8 COCK_RING[] = 
-    {
-        1,1,0,0,0,0,0,0,
-        1,1,1,1,0,0,0,0,
-        1,1,1,1,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0,0,0,1,1,0,0,0,
-        0,0,0,1,1,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-    };
-    
-    memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
-    //U8 i = 0;
-    //GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-    //    pState->m_map[i] = 'W';
-    //));
-}
-
-void gbPrintMap(Scene1_State *pState)
-{
-    U8 i = 0;
-    GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
-        printf("%d ", pState->m_map[i]);
-        if (END_OF_ROW(x))
-            putchar('\n');
-    ));
-}
 
 
 const U8 pkgLossFactor[5] = {205, 180, 154, 128, 64};
@@ -185,7 +155,7 @@ void gbMapSampleNeighbor(   P2 current_point,
             pQueue->m_queue[i] >> 3
         );
     
-    gbPrintMap(pState);
+    //gbPrintMap(pState);
     printf("error: failed to push to queue!");
 }
 
@@ -235,30 +205,58 @@ B8 gbFloodFill( P2 xy,
     return TRUE;
 }
 
+/// SCENE1 MAIN GAME LOGIC ///
+
 // Scene1 global state
 Scene1_State state;
 // Global vars, SUPER ROUGH
 U8  input       = 255,
     countdown   = 0,
     rng_val     = 0,
-    max_time    = 20,
+    max_time    = 10,
     start_time  = 0;
 
-void scene1Start()
+/// Initialization ///
+void scene1PrintMap(Scene1_State *pState)
 {
-    // Init RNG, timing, map
-    initrand(start_time);
-    start_time = time(NULL);
-    gbInitMap(&state);
+    U8 i = 0;
+    GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+        printf("%d ", pState->m_map[i]);
+        if (END_OF_ROW(x))
+            putchar('\n');
+    ));
+}
 
-    DISPLAY_ON;
-    SHOW_BKG;
+void scene1InitMap(Scene1_State *pState)
+{    
+    const U8 COCK_RING[] = 
+    {
+        1,1,0,0,0,0,0,0,
+        1,1,1,1,0,0,0,0,
+        1,1,1,1,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,1,1,0,0,0,
+        0,0,0,1,1,0,0,0,
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,
+    };
     
+    memcpy(pState->m_map, COCK_RING, sizeof(COCK_RING));
+    //U8 i = 0;
+    //GB_ITERATE_MAP(i, GB_FUNCTION_BODY(
+    //    pState->m_map[i] = 'W';
+    //));
+}
+
+void scene1InitBG()
+{
+    // Copy tileset to VRAM
     set_bkg_data(
         0, 
         scene1_2_tileset_size, 
         scene1_2_tileset
     );
+    // Set tilemap in VRAM
     set_bkg_tiles(
         0, 
         0, 
@@ -266,7 +264,59 @@ void scene1Start()
         scene1_2_tilemap_height, 
         scene1_2_tilemap
     );
+    // Set a single tile (DEBUG)
     set_bkg_tile_xy(4, 3, scene1_2_tileset_size-2);
+    
+    // Fade from black
+    gbFadeIn();
+}
+
+void scene1InitCounter()
+{
+    set_bkg_tile_xy(16, 3, number_start_index + (max_time / 10));
+    set_bkg_tile_xy(17, 3, number_start_index + (max_time % 10));
+}
+
+/// Updates ///
+B8 scene1UpdateCountdown()
+{
+    U8  old_countdown   = countdown;
+    countdown = gbCountdownSeconds(max_time, start_time);
+
+    // Update visual counter
+    if (old_countdown - countdown > 0)
+    {
+        set_bkg_tile_xy(16, 3, number_start_index + (countdown / 10));
+        set_bkg_tile_xy(17, 3, number_start_index + (countdown % 10));
+    }
+    return (countdown == 0);
+}
+
+void scene1UpdatePlayerActions()
+{
+
+}
+
+void scene1UpdateCursor()
+{
+    // NO-OP for now
+}
+
+void scene1Start()
+{
+    // Setup display
+    DISPLAY_ON;
+    SHOW_BKG;
+
+    // Init background
+    scene1InitBG();
+    scene1InitCounter();
+
+    // Init RNG, timing, map
+    initrand(start_time);
+    start_time = time(NULL);
+    scene1InitMap(&state);
+
 
     //gbFindChanceOfLostPkg(&state);
     //gbFloodFill(
@@ -277,13 +327,31 @@ void scene1Start()
     //gbPrintMap(&state);
 }
 
+void scene1End()
+{
+    gbFadeOut();
+}
+
 void scene1Update()
 {
     while(1)
     {
+        // Poll for input
         input = joypad();
+        
+        // Update counter
+        if (scene1UpdateCountdown() == TRUE)
+            break;
+        
+        // Update cursor
+        scene1UpdateCursor();
 
+        // Update player actions
+        scene1UpdatePlayerActions();
+
+        // Wait for end of frame
         wait_vbl_done();
+
         //countdown = gbCountdownSeconds(max_time, start_time);
         //rng_val = rand();    
         //printf("%d\n", rng_val);
@@ -293,4 +361,5 @@ void scene1Update()
         //cls();
         //gbPrintTiles();
     }
+    scene1End();
 }
